@@ -1,65 +1,98 @@
+import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { getCurrentProfile } from "@/lib/auth/profile";
+import { roleHome } from "@/lib/auth/roles";
+import { getSupabaseEnv } from "@/lib/supabase/env";
 
-export default function Home() {
+export default async function Home() {
+  const hasSupabaseConfig = Boolean(getSupabaseEnv());
+
+  if (hasSupabaseConfig) {
+    await connection();
+    const { profile } = await getCurrentProfile();
+
+    if (profile) {
+      redirect(roleHome[profile.rol]);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <main className="min-h-dvh bg-black text-white">
+      <section className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-6 py-8 sm:px-10">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src="/logo-saymon.jpeg"
+              alt="Logo SAYMON"
+              width={44}
+              height={44}
+              className="size-11 rounded-full border border-lime-400/70 object-cover"
+              priority
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-lime-300">
+                Comercio
+              </p>
+              <p className="text-lg font-black">SAYMON</p>
+            </div>
+          </div>
+          <Link
+            href="/login"
+            className="rounded-full border border-lime-300/60 px-4 py-2 text-sm font-semibold text-lime-200 transition hover:bg-lime-300 hover:text-black"
           >
-            Documentation
-          </a>
+            Ingresar
+          </Link>
+        </header>
+
+        <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="max-w-3xl">
+            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-lime-300">
+              POS + mayoristas
+            </p>
+            <h1 className="text-5xl font-black leading-tight text-white sm:text-7xl">
+              La columna vertebral digital de SAYMON.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
+              Sistema para ventas de mostrador, stock, doble precio y pedidos
+              mayoristas con entrega organizada.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/login"
+                className="rounded-full bg-lime-300 px-6 py-3 text-center font-bold text-black transition hover:bg-lime-200"
+              >
+                Iniciar sesion
+              </Link>
+              <Link
+                href="/mayorista"
+                className="rounded-full border border-white/20 px-6 py-3 text-center font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+              >
+                Portal mayorista
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-lime-300/30 bg-zinc-950 p-6 shadow-2xl shadow-lime-500/10">
+            <Image
+              src="/logo-saymon.jpeg"
+              alt="Logo SAYMON"
+              width={640}
+              height={640}
+              className="aspect-square w-full rounded-md object-cover"
+              priority
+            />
+            <div className="mt-6 grid grid-cols-3 gap-3 text-center text-sm text-zinc-300">
+              <div className="rounded-md border border-white/10 p-3">
+                Stock
+              </div>
+              <div className="rounded-md border border-white/10 p-3">POS</div>
+              <div className="rounded-md border border-white/10 p-3">B2B</div>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
