@@ -30,11 +30,16 @@ export default async function AdminPage() {
 
   return (
     <AppShell profile={profile} title="Administracion">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <ModuleCard
           title="Productos"
           description="Alta, precios, stock minimo, imagenes y activacion mayorista."
           href="/admin/productos"
+        />
+        <ModuleCard
+          title="Usuarios"
+          description="Alta y edicion de administradores, vendedores y mayoristas."
+          href="/admin/usuarios"
         />
         <ModuleCard
           title="Pedidos"

@@ -2,6 +2,14 @@
 
 This project uses Supabase Auth for login and `public.profiles` for SAYMON roles.
 
+Admin user management from the app requires a server-only service role key in `.env.local`:
+
+```text
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+```
+
+Never expose this key with `NEXT_PUBLIC_`.
+
 ## 1. Apply the profiles migration
 
 Open the Supabase project SQL Editor and run:
