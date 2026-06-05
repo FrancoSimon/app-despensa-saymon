@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
 import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import type { SaleTicket } from "@/lib/sales/types";
 import { getSaleTicket } from "@/lib/sales/queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
@@ -40,7 +41,7 @@ function buildWhatsAppMessage(ticket: SaleTicket) {
     "",
     `Venta: #${ticket.id.slice(0, 8)}`,
     `Fecha: ${formatDateTime(ticket.fecha)}`,
-    `Pago: ${ticket.formaPago.toUpperCase()}`,
+    `Pago: ${paymentMethodLabels[ticket.formaPago]}`,
     "",
     "Productos:",
     ...ticket.items.map(
@@ -128,7 +129,7 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
           </div>
           <div className="mt-1 flex justify-between gap-4">
             <span>Pago</span>
-            <strong>{ticket.formaPago.toUpperCase()}</strong>
+            <strong>{paymentMethodLabels[ticket.formaPago]}</strong>
           </div>
         </section>
 

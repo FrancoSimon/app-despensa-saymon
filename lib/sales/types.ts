@@ -1,4 +1,9 @@
-export type PaymentMethod = "efectivo" | "qr";
+export type PaymentMethod =
+  | "efectivo"
+  | "qr"
+  | "tarjeta_credito"
+  | "tarjeta_debito"
+  | "transferencia";
 
 export type ConfirmSaleItemInput = {
   productoId: string;

@@ -1,3 +1,5 @@
+import type { PaymentMethod } from "@/lib/sales/types";
+
 export type ReportDateRange = {
   from: string;
   to: string;
@@ -10,6 +12,8 @@ export type SalesSummary = {
   count: number;
   cashTotal: number;
   qrTotal: number;
+  cardTotal: number;
+  transferTotal: number;
 };
 
 export type DailySalesRow = {
@@ -40,7 +44,7 @@ export type WholesaleStatusCount = {
 
 export type SaleRow = {
   fecha: string;
-  forma_pago: "efectivo" | "qr";
+  forma_pago: PaymentMethod;
   total: number | string;
 };
 

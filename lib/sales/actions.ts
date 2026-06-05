@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { isPaymentMethod } from "@/lib/sales/payment-methods";
 import { createClient } from "@/lib/supabase/server";
 import type {
   ConfirmSaleInput,
@@ -35,7 +36,7 @@ export async function confirmCounterSaleAction(
   assertPercentage(input.descuentoPorcentaje, "El descuento");
   assertPercentage(input.recargoPorcentaje, "El recargo");
 
-  if (input.formaPago !== "efectivo" && input.formaPago !== "qr") {
+  if (!isPaymentMethod(input.formaPago)) {
     throw new Error("Forma de pago invalida.");
   }
 
@@ -82,4 +83,3 @@ export async function confirmCounterSaleAction(
     fecha: data.fecha,
   };
 }
-

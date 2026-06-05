@@ -27,6 +27,8 @@ function emptySummary(): SalesSummary {
     count: 0,
     cashTotal: 0,
     qrTotal: 0,
+    cardTotal: 0,
+    transferTotal: 0,
   };
 }
 
@@ -55,6 +57,15 @@ export async function getSalesSummary(range: ReportDateRange) {
       count: summary.count + 1,
       cashTotal: summary.cashTotal + (sale.forma_pago === "efectivo" ? total : 0),
       qrTotal: summary.qrTotal + (sale.forma_pago === "qr" ? total : 0),
+      cardTotal:
+        summary.cardTotal +
+        (sale.forma_pago === "tarjeta_credito" ||
+        sale.forma_pago === "tarjeta_debito"
+          ? total
+          : 0),
+      transferTotal:
+        summary.transferTotal +
+        (sale.forma_pago === "transferencia" ? total : 0),
     };
   }, emptySummary());
 }

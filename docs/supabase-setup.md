@@ -113,3 +113,13 @@ supabase/migrations/20260605020000_create_wholesale_order_delivery_rpc.sql
 ```
 
 This creates the admin-only `entregar_pedido_mayorista` RPC used to mark confirmed wholesale orders as delivered without modifying stock.
+
+## 11. Apply the counter sale payment methods migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605030000_add_counter_sale_payment_methods.sql
+```
+
+This extends `forma_pago_venta` with `tarjeta_credito`, `tarjeta_debito`, and `transferencia` for the POS checkout.

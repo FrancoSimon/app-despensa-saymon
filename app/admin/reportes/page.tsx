@@ -93,7 +93,7 @@ export default async function AdminReportsPage({
         </form>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <article className="rounded-lg border border-white/10 bg-black p-5">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
             Ventas
@@ -115,10 +115,26 @@ export default async function AdminReportsPage({
         </article>
         <article className="rounded-lg border border-white/10 bg-black p-5">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Tarjetas
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(salesSummary.cardTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
             QR
           </p>
           <p className="mt-3 text-2xl font-black text-white">
             {money(salesSummary.qrTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Transferencia
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(salesSummary.transferTotal)}
           </p>
         </article>
         <article className="rounded-lg border border-white/10 bg-black p-5">

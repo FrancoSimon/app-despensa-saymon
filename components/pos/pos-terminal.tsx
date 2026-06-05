@@ -4,6 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { confirmCounterSaleAction } from "@/lib/sales/actions";
+import {
+  paymentMethodLabels,
+  paymentMethodOptions,
+} from "@/lib/sales/payment-methods";
 import type { ConfirmSaleResult, PaymentMethod } from "@/lib/sales/types";
 import type { Product } from "@/lib/products/types";
 
@@ -315,28 +319,20 @@ export function PosTerminal({ products }: PosTerminalProps) {
           </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("efectivo")}
-              className={
-                paymentMethod === "efectivo"
-                  ? "rounded-md bg-lime-300 px-4 py-3 font-black text-black"
-                  : "rounded-md border border-white/10 px-4 py-3 font-bold text-zinc-300"
-              }
-            >
-              Efectivo
-            </button>
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("qr")}
-              className={
-                paymentMethod === "qr"
-                  ? "rounded-md bg-lime-300 px-4 py-3 font-black text-black"
-                  : "rounded-md border border-white/10 px-4 py-3 font-bold text-zinc-300"
-              }
-            >
-              QR
-            </button>
+            {paymentMethodOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setPaymentMethod(option.value)}
+                className={
+                  paymentMethod === option.value
+                    ? "rounded-md bg-lime-300 px-4 py-3 font-black text-black"
+                    : "rounded-md border border-white/10 px-4 py-3 font-bold text-zinc-300"
+                }
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
 
           <div className="rounded-md border border-white/10 bg-zinc-950 p-4">
@@ -415,7 +411,7 @@ export function PosTerminal({ products }: PosTerminalProps) {
                 <span>{money(ticket.total)}</span>
               </div>
               <p className="mt-2 text-zinc-500">
-                Forma de pago: {ticket.formaPago.toUpperCase()}
+                Forma de pago: {paymentMethodLabels[ticket.formaPago]}
               </p>
             </div>
             <Link
