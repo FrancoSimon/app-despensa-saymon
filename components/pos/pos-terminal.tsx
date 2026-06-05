@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { BarcodeScanner } from "@/components/pos/barcode-scanner";
 import { confirmCounterSaleAction } from "@/lib/sales/actions";
 import {
   paymentMethodLabels,
@@ -166,6 +167,8 @@ export function PosTerminal({ products }: PosTerminalProps) {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <section className="rounded-lg border border-white/10 bg-black p-5">
+        <BarcodeScanner products={products} onProductScanned={addProduct} />
+
         <div className="mb-4">
           <label className="mb-2 block text-sm font-semibold text-zinc-200">
             Buscar producto
