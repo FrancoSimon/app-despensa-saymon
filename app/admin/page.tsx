@@ -5,6 +5,9 @@ import { ModuleCard } from "@/components/layout/module-card";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { getLowStockCount } from "@/lib/products/queries";
+import { getTodayReportDateRange } from "@/lib/reports/dates";
+import { getSalesSummary } from "@/lib/reports/queries";
+import { getPendingWholesaleOrderCount } from "@/lib/wholesale/queries";
 
 export default async function AdminPage() {
   await connection();
@@ -19,7 +22,11 @@ export default async function AdminPage() {
     return null;
   }
 
-  const lowStockCount = await getLowStockCount();
+  const [lowStockCount, pendingOrdersCount, todaySales] = await Promise.all([
+    getLowStockCount(),
+    getPendingWholesaleOrderCount(),
+    getSalesSummary(getTodayReportDateRange()),
+  ]);
 
   return (
     <AppShell profile={profile} title="Administracion">
@@ -32,6 +39,8 @@ export default async function AdminPage() {
         <ModuleCard
           title="Pedidos"
           description="Confirmacion o rechazo de pedidos mayoristas con control de stock."
+          href="/admin/pedidos"
+          meta={pendingOrdersCount === null ? "N/D" : String(pendingOrdersCount)}
         />
         <ModuleCard
           title="Stock bajo"
@@ -41,6 +50,12 @@ export default async function AdminPage() {
         <ModuleCard
           title="Reportes"
           description="Ventas de hoy, productos mas vendidos y exportaciones futuras."
+          href="/admin/reportes"
+          meta={new Intl.NumberFormat("es-AR", {
+            style: "currency",
+            currency: "ARS",
+            maximumFractionDigits: 0,
+          }).format(todaySales.total)}
         />
       </div>
     </AppShell>

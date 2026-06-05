@@ -1,9 +1,12 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/app-shell";
-import { ModuleCard } from "@/components/layout/module-card";
+import { WholesaleOrderTerminal } from "@/components/wholesale/wholesale-order-terminal";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { listWholesaleProducts } from "@/lib/products/wholesale-queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
+import { getWholesaleDeliveryOptions } from "@/lib/wholesale/dates";
+import { listMyWholesaleOrders } from "@/lib/wholesale/queries";
 
 export default async function WholesalePage() {
   await connection();
@@ -18,22 +21,18 @@ export default async function WholesalePage() {
     return null;
   }
 
+  const [products, orders] = await Promise.all([
+    listWholesaleProducts(),
+    listMyWholesaleOrders(),
+  ]);
+
   return (
     <AppShell profile={profile} title="Portal mayorista">
-      <div className="grid gap-4 md:grid-cols-3">
-        <ModuleCard
-          title="Catalogo"
-          description="Productos habilitados para mayoristas con precio fijo y especial."
-        />
-        <ModuleCard
-          title="Nuevo pedido"
-          description="Carrito mayorista con fecha de reparto limitada a sabados."
-        />
-        <ModuleCard
-          title="Mis pedidos"
-          description="Historial de pedidos pendientes, confirmados, entregados o rechazados."
-        />
-      </div>
+      <WholesaleOrderTerminal
+        products={products}
+        deliveryOptions={getWholesaleDeliveryOptions()}
+        orders={orders}
+      />
     </AppShell>
   );
 }

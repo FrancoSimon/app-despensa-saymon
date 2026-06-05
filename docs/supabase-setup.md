@@ -77,3 +77,39 @@ supabase/migrations/20260604010000_create_counter_sales.sql
 ```
 
 This creates `ventas`, `venta_items`, RLS policies, and the `confirmar_venta_mostrador` RPC used by the POS to register sales and decrement stock atomically.
+
+If Supabase reports `column reference "fecha" is ambiguous` when confirming a sale, run:
+
+```text
+supabase/fixes/20260604_fix_confirmar_venta_fecha_ambiguous.sql
+```
+
+## 8. Apply the wholesale orders migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605000000_create_wholesale_orders.sql
+```
+
+This creates `pedidos_mayoristas`, `pedido_mayorista_items`, RLS policies, and the `crear_pedido_mayorista` RPC used by the wholesale portal to create pending orders without decrementing stock.
+
+## 9. Apply the wholesale admin RPC migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605010000_create_wholesale_order_admin_rpcs.sql
+```
+
+This creates the admin-only `confirmar_pedido_mayorista` and `rechazar_pedido_mayorista` RPCs. Confirmation verifies current stock, deducts it atomically, and marks the order as confirmed. Rejection does not change stock.
+
+## 10. Apply the wholesale delivery RPC migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605020000_create_wholesale_order_delivery_rpc.sql
+```
+
+This creates the admin-only `entregar_pedido_mayorista` RPC used to mark confirmed wholesale orders as delivered without modifying stock.
