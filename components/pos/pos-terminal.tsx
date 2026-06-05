@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { confirmCounterSaleAction } from "@/lib/sales/actions";
 import type { ConfirmSaleResult, PaymentMethod } from "@/lib/sales/types";
@@ -201,7 +202,7 @@ export function PosTerminal({ products }: PosTerminalProps) {
                 <p className="mt-1 text-sm text-zinc-400">{product.categoria}</p>
                 <p className="mt-1 text-xs text-zinc-600">
                   Stock {product.stock}
-                  {product.codigoBarras ? ` · ${product.codigoBarras}` : ""}
+                  {product.codigoBarras ? ` - ${product.codigoBarras}` : ""}
                 </p>
               </div>
               <div className="font-black text-lime-300">
@@ -380,7 +381,7 @@ export function PosTerminal({ products }: PosTerminalProps) {
             </p>
             <h3 className="mt-2 text-xl font-black text-white">SAYMON</h3>
             <p className="mt-1 text-sm text-zinc-400">
-              Venta {ticket.ventaId.slice(0, 8)} ·{" "}
+              Venta {ticket.ventaId.slice(0, 8)} -{" "}
               {new Date(ticket.fecha).toLocaleString("es-AR")}
             </p>
             <div className="mt-4 grid gap-2">
@@ -417,10 +418,15 @@ export function PosTerminal({ products }: PosTerminalProps) {
                 Forma de pago: {ticket.formaPago.toUpperCase()}
               </p>
             </div>
+            <Link
+              href={`/vendedor/ventas/${ticket.ventaId}/ticket`}
+              className="mt-4 block rounded-md bg-lime-300 px-4 py-3 text-center text-sm font-black text-black transition hover:bg-lime-200"
+            >
+              Imprimir / guardar PDF
+            </Link>
           </div>
         ) : null}
       </section>
     </div>
   );
 }
-
