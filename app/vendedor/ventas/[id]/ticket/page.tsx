@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
+import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import type { SaleTicket } from "@/lib/sales/types";
 import { getSaleTicket } from "@/lib/sales/queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
@@ -31,6 +33,32 @@ function formatDateTime(value: string) {
   });
 }
 
+function buildWhatsAppMessage(ticket: SaleTicket) {
+  const lines = [
+    "SAYMON - Ticket interno",
+    "No valido como factura",
+    "",
+    `Venta: #${ticket.id.slice(0, 8)}`,
+    `Fecha: ${formatDateTime(ticket.fecha)}`,
+    `Pago: ${ticket.formaPago.toUpperCase()}`,
+    "",
+    "Productos:",
+    ...ticket.items.map(
+      (item) =>
+        `${item.cantidad} x ${item.productoNombre} - ${money(item.subtotal)}`,
+    ),
+    "",
+    `Subtotal: ${money(ticket.subtotal)}`,
+    `Descuento ${ticket.descuentoPorcentaje}%: - ${money(ticket.descuentoMonto)}`,
+    `Recargo ${ticket.recargoPorcentaje}%: + ${money(ticket.recargoMonto)}`,
+    `Total: ${money(ticket.total)}`,
+    "",
+    "Comercio SAYMON",
+  ];
+
+  return lines.join("\n");
+}
+
 export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
   await connection();
 
@@ -51,15 +79,18 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
     notFound();
   }
 
+  const whatsAppMessage = buildWhatsAppMessage(ticket);
+
   return (
     <main className="min-h-dvh bg-zinc-950 px-4 py-6 text-zinc-950 print:bg-white print:p-0">
-      <div className="mx-auto mb-5 flex max-w-sm items-center justify-between gap-3 text-white print:hidden">
+      <div className="mx-auto mb-5 flex max-w-sm flex-wrap items-center justify-between gap-3 text-white print:hidden">
         <Link
           href="/vendedor"
           className="rounded-md border border-white/15 px-4 py-3 text-sm font-bold transition hover:border-lime-300"
         >
           Volver
         </Link>
+        <WhatsAppTicketButton message={whatsAppMessage} />
         <PrintTicketButton />
       </div>
 
