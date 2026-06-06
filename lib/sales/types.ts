@@ -3,7 +3,8 @@ export type PaymentMethod =
   | "qr"
   | "tarjeta_credito"
   | "tarjeta_debito"
-  | "transferencia";
+  | "transferencia"
+  | "cuenta_corriente";
 
 export type ConfirmSaleItemInput = {
   productoId: string;

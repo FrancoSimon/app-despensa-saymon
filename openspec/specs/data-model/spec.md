@@ -1,9 +1,7 @@
 ## Purpose
 
 Define core data entities required by the SAYMON MVP.
-
 ## Requirements
-
 ### Requirement: User Profile Entity
 The system SHALL store application user profiles linked to Supabase Auth users.
 
@@ -36,3 +34,15 @@ The system SHALL store wholesale orders.
 - **WHEN** a wholesale order is created
 - **THEN** the system stores id, wholesale user id, order date, desired delivery date, optional assigned delivery date, status, total, and optional comment
 - **AND** status is one of `pendiente`, `confirmado`, `entregado`, or `rechazado`
+
+### Requirement: Customer Account Movement Entity
+The system SHALL store customer current-account debit and payment movements.
+
+#### Scenario: Account movement is persisted
+- **WHEN** a current-account sale or payment is registered
+- **THEN** the system stores id, customer id, admin/seller profile id, optional sale id, type, amount, payment method when applicable, note, and timestamp
+- **AND** movement type is one of `venta` or `pago`
+
+#### Scenario: Current-account sale is canceled
+- **WHEN** a current-account sale is canceled
+- **THEN** the account movement linked to that sale no longer contributes to the customer balance

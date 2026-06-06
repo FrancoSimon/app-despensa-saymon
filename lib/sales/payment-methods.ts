@@ -6,6 +6,7 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   tarjeta_credito: "Tarjeta credito",
   tarjeta_debito: "Tarjeta debito",
   transferencia: "Transferencia",
+  cuenta_corriente: "Cuenta corriente",
 };
 
 export const paymentMethodOptions: { value: PaymentMethod; label: string }[] = [
@@ -14,6 +15,7 @@ export const paymentMethodOptions: { value: PaymentMethod; label: string }[] = [
   { value: "tarjeta_credito", label: paymentMethodLabels.tarjeta_credito },
   { value: "tarjeta_debito", label: paymentMethodLabels.tarjeta_debito },
   { value: "transferencia", label: paymentMethodLabels.transferencia },
+  { value: "cuenta_corriente", label: paymentMethodLabels.cuenta_corriente },
 ];
 
 export function isPaymentMethod(value: unknown): value is PaymentMethod {
@@ -22,6 +24,7 @@ export function isPaymentMethod(value: unknown): value is PaymentMethod {
     value === "qr" ||
     value === "tarjeta_credito" ||
     value === "tarjeta_debito" ||
-    value === "transferencia"
+    value === "transferencia" ||
+    value === "cuenta_corriente"
   );
 }

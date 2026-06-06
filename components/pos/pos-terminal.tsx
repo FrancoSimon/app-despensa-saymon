@@ -182,6 +182,11 @@ export function PosTerminal({
       return;
     }
 
+    if (paymentMethod === "cuenta_corriente" && !selectedCustomerId) {
+      setError("Selecciona un cliente para vender en cuenta corriente.");
+      return;
+    }
+
     const ticketItems = cart.map((item) => ({ ...item }));
 
     startTransition(async () => {

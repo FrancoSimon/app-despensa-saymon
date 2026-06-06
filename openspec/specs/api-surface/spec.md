@@ -1,9 +1,7 @@
 ## Purpose
 
 Define the initial API surface expected by the SAYMON MVP.
-
 ## Requirements
-
 ### Requirement: Authentication API
 The system SHALL expose or integrate authentication through Supabase Auth.
 
@@ -54,3 +52,12 @@ The system SHALL expose an admin file upload endpoint.
 #### Scenario: Product image upload request
 - **WHEN** an admin posts multipart form data to `POST /api/upload`
 - **THEN** the system uploads the file and returns a public URL
+
+### Requirement: Customer Account Admin Surface
+The app SHALL expose an admin current-account page.
+
+#### Scenario: Admin reviews accounts
+- **WHEN** an admin navigates to `/admin/cuentas-corrientes`
+- **THEN** the app shows customers with current balance
+- **AND** the admin can register a partial or full payment
+- **AND** each payment links to a printable internal receipt

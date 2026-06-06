@@ -1,9 +1,7 @@
 ## Purpose
 
 Define the seller point-of-sale flow for counter sales.
-
 ## Requirements
-
 ### Requirement: Product Search
 The POS SHALL allow sellers to search products by name or barcode.
 
@@ -72,3 +70,21 @@ The POS SHALL generate a downloadable and printable internal PDF ticket after sa
 - **THEN** the ticket includes SAYMON, date, time, sale number, items, quantities, unit prices, subtotals, discount, surcharge, total, and payment method
 - **AND** the seller can download or print the PDF
 - **AND** the ticket is an internal sales record, not a fiscal or legal invoice
+
+### Requirement: Current Account Sales
+The POS SHALL allow sellers to register counter sales on customer current account.
+
+#### Scenario: Seller confirms current-account sale
+- **WHEN** the seller selects `cuenta_corriente`
+- **THEN** the system requires an active customer
+- **AND** registers the sale
+- **AND** creates a customer account debit movement for the sale total
+
+#### Scenario: Seller confirms current-account sale without customer
+- **WHEN** the seller selects `cuenta_corriente` without a customer
+- **THEN** the system blocks checkout with an actionable error
+
+#### Scenario: Seller cancels current-account sale
+- **WHEN** a current-account counter sale is canceled
+- **THEN** the system restores product stock
+- **AND** removes the customer account debit movement associated with the canceled sale

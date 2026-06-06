@@ -46,6 +46,10 @@ export async function confirmCounterSaleAction(
       ? input.clienteId.trim()
       : null;
 
+  if (input.formaPago === "cuenta_corriente" && !clienteId) {
+    throw new Error("Selecciona un cliente para vender en cuenta corriente.");
+  }
+
   const items = input.items.map((item) => {
     if (
       typeof item.productoId !== "string" ||
@@ -83,6 +87,7 @@ export async function confirmCounterSaleAction(
   revalidatePath("/admin/stock");
   revalidatePath("/vendedor/caja");
   revalidatePath("/admin/cajas");
+  revalidatePath("/admin/cuentas-corrientes");
 
   return {
     ventaId: data.venta_id,
@@ -130,6 +135,7 @@ export async function cancelCounterSaleAction(formData: FormData) {
   revalidatePath("/admin/stock");
   revalidatePath("/vendedor/caja");
   revalidatePath("/admin/cajas");
+  revalidatePath("/admin/cuentas-corrientes");
   revalidatePath(`/vendedor/ventas/${ventaId}/ticket`);
 
   const returnTo =

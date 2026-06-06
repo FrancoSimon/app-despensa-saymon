@@ -102,6 +102,11 @@ export default async function AdminPage() {
           href="/admin/cajas"
         />
         <ModuleCard
+          title="Cuentas corrientes"
+          description="Saldos de clientes, pagos parciales y recibos."
+          href="/admin/cuentas-corrientes"
+        />
+        <ModuleCard
           title="Productos"
           description="Alta, precios, stock minimo, imagenes y activacion mayorista."
           href="/admin/productos"
