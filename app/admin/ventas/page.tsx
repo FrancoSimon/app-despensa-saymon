@@ -10,7 +10,12 @@ import {
 import type { AdminSaleStatusFilter, SaleStatus } from "@/lib/sales/types";
 
 type AdminSalesPageProps = {
-  searchParams: Promise<{ estado?: string; desde?: string; hasta?: string }>;
+  searchParams: Promise<{
+    estado?: string;
+    desde?: string;
+    hasta?: string;
+    volver?: string;
+  }>;
 };
 
 const statusOptions: { value: AdminSaleStatusFilter; label: string }[] = [
@@ -42,14 +47,23 @@ function formatDateTime(value: string) {
   });
 }
 
+function getBackHref(value: string | undefined) {
+  if (value?.startsWith("/admin/reportes")) {
+    return value;
+  }
+
+  return "/admin";
+}
+
 export default async function AdminSalesPage({
   searchParams,
 }: AdminSalesPageProps) {
   const profile = await requireAdminProfile();
-  const { estado, desde, hasta } = await searchParams;
+  const { estado, desde, hasta, volver } = await searchParams;
   const status = isAdminSaleStatusFilter(estado) ? estado : "todas";
   const range = createReportDateRange(desde, hasta);
   const sales = await listAdminSales(status, range);
+  const backHref = getBackHref(volver);
   const query = new URLSearchParams({
     desde: range.from,
     hasta: range.to,
@@ -59,16 +73,22 @@ export default async function AdminSalesPage({
     query.set("estado", status);
   }
 
+  if (backHref !== "/admin") {
+    query.set("volver", backHref);
+  }
+
   const returnHref = `/admin/ventas?${query.toString()}`;
 
   return (
     <AppShell profile={profile} title="Ventas mostrador">
       <div className="mb-5">
         <Link
-          href="/admin"
+          href={backHref}
           className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
         >
-          Volver al panel
+          {backHref.startsWith("/admin/reportes")
+            ? "Volver a reportes"
+            : "Volver al panel"}
         </Link>
       </div>
 
@@ -82,6 +102,10 @@ export default async function AdminSalesPage({
 
             if (option.value !== "todas") {
               optionQuery.set("estado", option.value);
+            }
+
+            if (backHref !== "/admin") {
+              optionQuery.set("volver", backHref);
             }
 
             return (
@@ -103,6 +127,9 @@ export default async function AdminSalesPage({
         <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
           {status !== "todas" ? (
             <input type="hidden" name="estado" value={status} />
+          ) : null}
+          {backHref !== "/admin" ? (
+            <input type="hidden" name="volver" value={backHref} />
           ) : null}
           <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
             Desde

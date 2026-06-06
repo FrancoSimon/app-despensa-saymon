@@ -16,6 +16,7 @@ type AdminPendingOrdersProps = {
     value: string;
     label: string;
   }[];
+  returnHref?: string | null;
 };
 
 const initialState: AdminWholesaleOrderActionState = {
@@ -70,6 +71,7 @@ export function AdminPendingOrders({
   orders,
   selectedStatus,
   deliveryOptions,
+  returnHref,
 }: AdminPendingOrdersProps) {
   const [state, formAction, pending] = useActionState(
     manageWholesaleOrderAction,
@@ -79,23 +81,35 @@ export function AdminPendingOrders({
   return (
     <div className="grid gap-5">
       <nav className="flex flex-wrap gap-2">
-        {statusOptions.map((option) => (
-          <Link
-            key={option.value}
-            href={
-              option.value === "pendiente"
-                ? "/admin/pedidos"
-                : `/admin/pedidos?estado=${option.value}`
-            }
-            className={
-              selectedStatus === option.value
-                ? "rounded-md bg-lime-300 px-3 py-2 text-sm font-black text-black"
-                : "rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
-            }
-          >
-            {option.label}
-          </Link>
-        ))}
+        {statusOptions.map((option) => {
+          const query = new URLSearchParams();
+
+          if (option.value !== "pendiente") {
+            query.set("estado", option.value);
+          }
+
+          if (returnHref) {
+            query.set("volver", returnHref);
+          }
+
+          const href = query.toString()
+            ? `/admin/pedidos?${query.toString()}`
+            : "/admin/pedidos";
+
+          return (
+            <Link
+              key={option.value}
+              href={href}
+              className={
+                selectedStatus === option.value
+                  ? "rounded-md bg-lime-300 px-3 py-2 text-sm font-black text-black"
+                  : "rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+              }
+            >
+              {option.label}
+            </Link>
+          );
+        })}
       </nav>
 
       {state.message ? (

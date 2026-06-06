@@ -3,6 +3,12 @@ import { AppShell } from "@/components/layout/app-shell";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { listRecentCashRegisters } from "@/lib/cash/queries";
 
+type AdminCashRegistersPageProps = {
+  searchParams: Promise<{
+    volver?: string;
+  }>;
+};
+
 function money(value: number) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -25,18 +31,32 @@ function formatDateTime(value: string | null) {
   });
 }
 
-export default async function AdminCashRegistersPage() {
+function getBackHref(value: string | undefined) {
+  if (value?.startsWith("/admin/reportes")) {
+    return value;
+  }
+
+  return "/admin";
+}
+
+export default async function AdminCashRegistersPage({
+  searchParams,
+}: AdminCashRegistersPageProps) {
   const profile = await requireAdminProfile();
+  const { volver } = await searchParams;
+  const backHref = getBackHref(volver);
   const cashRegisters = await listRecentCashRegisters();
 
   return (
     <AppShell profile={profile} title="Cajas">
       <div className="mb-5">
         <Link
-          href="/admin"
+          href={backHref}
           className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
         >
-          Volver al panel
+          {backHref.startsWith("/admin/reportes")
+            ? "Volver a reportes"
+            : "Volver al panel"}
         </Link>
       </div>
 
@@ -113,7 +133,11 @@ export default async function AdminCashRegistersPage() {
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={`/admin/cajas/${cashRegister.id}`}
+                      href={
+                        backHref.startsWith("/admin/reportes")
+                          ? `/admin/cajas/${cashRegister.id}?volver=${encodeURIComponent(backHref)}`
+                          : `/admin/cajas/${cashRegister.id}`
+                      }
                       className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
                     >
                       Ver detalle

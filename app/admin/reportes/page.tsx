@@ -77,6 +77,7 @@ export default async function AdminReportsPage({
     listCashRegisterReportRows(range),
   ]);
   const reportsReturnHref = `/admin/reportes?desde=${range.from}&hasta=${range.to}`;
+  const encodedReportsReturnHref = encodeURIComponent(reportsReturnHref);
 
   return (
     <AppShell profile={profile} title="Reportes">
@@ -170,7 +171,7 @@ export default async function AdminReportsPage({
           </p>
         </article>
         <Link
-          href={`/admin/ventas?estado=anulada&desde=${range.from}&hasta=${range.to}`}
+          href={`/admin/ventas?estado=anulada&desde=${range.from}&hasta=${range.to}&volver=${encodedReportsReturnHref}`}
           className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
         >
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
@@ -181,7 +182,7 @@ export default async function AdminReportsPage({
           </p>
         </Link>
         <Link
-          href="/admin/cajas"
+          href={`/admin/cajas?volver=${encodedReportsReturnHref}`}
           className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
         >
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
@@ -327,7 +328,7 @@ export default async function AdminReportsPage({
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-black text-white">Cajas del periodo</h2>
           <Link
-            href="/admin/cajas"
+            href={`/admin/cajas?volver=${encodedReportsReturnHref}`}
             className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
           >
             Ver todas
@@ -448,7 +449,7 @@ export default async function AdminReportsPage({
             {wholesaleStatusCounts.map((row) => (
               <Link
                 key={row.estado}
-                href={`/admin/pedidos?estado=${row.estado}`}
+                href={`/admin/pedidos?estado=${row.estado}&volver=${encodedReportsReturnHref}`}
                 className="rounded-md border border-white/10 bg-zinc-950 p-4 transition hover:border-lime-300"
               >
                 <p className="text-sm font-bold capitalize text-zinc-300">

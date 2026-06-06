@@ -9,31 +9,43 @@ import {
 } from "@/lib/wholesale/queries";
 
 type AdminWholesaleOrdersPageProps = {
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; volver?: string }>;
 };
+
+function getBackHref(value: string | undefined) {
+  if (value?.startsWith("/admin/reportes")) {
+    return value;
+  }
+
+  return "/admin";
+}
 
 export default async function AdminWholesaleOrdersPage({
   searchParams,
 }: AdminWholesaleOrdersPageProps) {
   const profile = await requireAdminProfile();
-  const { estado } = await searchParams;
+  const { estado, volver } = await searchParams;
   const status = isAdminWholesaleOrderStatusFilter(estado) ? estado : "pendiente";
+  const backHref = getBackHref(volver);
   const orders = await listWholesaleOrdersForAdmin(status);
 
   return (
     <AppShell profile={profile} title="Pedidos mayoristas">
       <div className="mb-5">
         <Link
-          href="/admin"
+          href={backHref}
           className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
         >
-          Volver al panel
+          {backHref.startsWith("/admin/reportes")
+            ? "Volver a reportes"
+            : "Volver al panel"}
         </Link>
       </div>
       <AdminPendingOrders
         orders={orders}
         selectedStatus={status}
         deliveryOptions={getWholesaleDeliveryOptions(10)}
+        returnHref={backHref === "/admin" ? null : backHref}
       />
     </AppShell>
   );
