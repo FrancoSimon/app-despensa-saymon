@@ -92,7 +92,8 @@ export function isAdminWholesaleOrderStatusFilter(
     value === "pendiente" ||
     value === "confirmado" ||
     value === "entregado" ||
-    value === "rechazado"
+    value === "rechazado" ||
+    value === "cancelado"
   );
 }
 

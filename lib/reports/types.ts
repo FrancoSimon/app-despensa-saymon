@@ -38,7 +38,7 @@ export type LowStockReportRow = {
 };
 
 export type WholesaleStatusCount = {
-  estado: "pendiente" | "confirmado" | "entregado" | "rechazado";
+  estado: "pendiente" | "confirmado" | "entregado" | "rechazado" | "cancelado";
   count: number;
 };
 

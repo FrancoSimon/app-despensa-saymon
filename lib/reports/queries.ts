@@ -325,6 +325,7 @@ export async function listWholesaleOrderStatusCounts() {
     { estado: "confirmado", count: 0 },
     { estado: "entregado", count: 0 },
     { estado: "rechazado", count: 0 },
+    { estado: "cancelado", count: 0 },
   ];
 
   if (error) {

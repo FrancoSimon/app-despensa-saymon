@@ -28,6 +28,7 @@ const statusOptions: { value: WholesaleOrderStatus | "todos"; label: string }[] 
   { value: "confirmado", label: "Confirmados" },
   { value: "entregado", label: "Entregados" },
   { value: "rechazado", label: "Rechazados" },
+  { value: "cancelado", label: "Cancelados" },
   { value: "todos", label: "Todos" },
 ];
 
@@ -36,6 +37,7 @@ const statusLabels: Record<WholesaleOrderStatus, string> = {
   confirmado: "Confirmado",
   entregado: "Entregado",
   rechazado: "Rechazado",
+  cancelado: "Cancelado",
 };
 
 function money(value: number) {
@@ -287,25 +289,58 @@ export function AdminPendingOrders({
             ) : null}
 
             {order.estado === "confirmado" ? (
-              <form action={formAction} className="mt-5">
-                <input type="hidden" name="actionType" value="entregar" />
-                <input type="hidden" name="pedidoId" value={order.id} />
-                <button
-                  type="submit"
-                  disabled={pending}
-                  onClick={(event) => {
-                    if (!window.confirm("Marcar este pedido como entregado?")) {
-                      event.preventDefault();
-                    }
-                  }}
-                  className="rounded-md bg-lime-300 px-4 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Marcar como entregado
-                </button>
-              </form>
+              <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr]">
+                <form action={formAction}>
+                  <input type="hidden" name="actionType" value="entregar" />
+                  <input type="hidden" name="pedidoId" value={order.id} />
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    onClick={(event) => {
+                      if (!window.confirm("Marcar este pedido como entregado?")) {
+                        event.preventDefault();
+                      }
+                    }}
+                    className="w-full rounded-md bg-lime-300 px-4 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Marcar como entregado
+                  </button>
+                </form>
+
+                <form action={formAction} className="grid gap-3">
+                  <input type="hidden" name="actionType" value="cancelar" />
+                  <input type="hidden" name="pedidoId" value={order.id} />
+                  <label className="text-sm font-semibold text-zinc-200">
+                    Motivo de cancelacion
+                    <textarea
+                      name="motivoCancelacion"
+                      rows={3}
+                      className="mt-2 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-3 text-white outline-none transition focus:border-red-300"
+                      required
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={pending}
+                    onClick={(event) => {
+                      if (
+                        !window.confirm(
+                          "Cancelar pedido y reponer el stock descontado?",
+                        )
+                      ) {
+                        event.preventDefault();
+                      }
+                    }}
+                    className="rounded-md border border-red-400/30 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Cancelar y reponer stock
+                  </button>
+                </form>
+              </div>
             ) : null}
 
-            {order.estado === "rechazado" && order.motivoRechazo ? (
+            {(order.estado === "rechazado" || order.estado === "cancelado") &&
+            order.motivoRechazo ? (
               <p className="mt-5 rounded-md border border-red-400/30 bg-red-950/30 px-3 py-2 text-sm text-red-100">
                 Motivo: {order.motivoRechazo}
               </p>

@@ -161,3 +161,13 @@ supabase/migrations/20260605060000_add_counter_sale_cancellation.sql
 ```
 
 This adds sale cancellation metadata and the `cancelar_venta_mostrador` RPC used to cancel active counter sales, restore stock, and record stock entry movements.
+
+## 15. Apply the wholesale order cancellation migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605070000_add_wholesale_order_cancellation.sql
+```
+
+This adds the `cancelado` wholesale order state and the `cancelar_pedido_mayorista` RPC used to cancel confirmed wholesale orders, restore stock, and record stock entry movements.

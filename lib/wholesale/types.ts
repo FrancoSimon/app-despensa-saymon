@@ -2,7 +2,8 @@ export type WholesaleOrderStatus =
   | "pendiente"
   | "confirmado"
   | "entregado"
-  | "rechazado";
+  | "rechazado"
+  | "cancelado";
 
 export type WholesaleOrderInput = {
   items: {

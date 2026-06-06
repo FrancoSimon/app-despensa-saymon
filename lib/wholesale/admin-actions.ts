@@ -72,6 +72,7 @@ export async function manageWholesaleOrderAction(
 
       revalidatePath("/admin");
       revalidatePath("/admin/pedidos");
+      revalidatePath("/admin/reportes");
       revalidatePath("/mayorista");
 
       return {
@@ -91,11 +92,41 @@ export async function manageWholesaleOrderAction(
 
       revalidatePath("/admin");
       revalidatePath("/admin/pedidos");
+      revalidatePath("/admin/reportes");
       revalidatePath("/mayorista");
 
       return {
         ok: true,
         message: `Pedido #${pedidoId.slice(0, 8)} marcado como entregado.`,
+      };
+    }
+
+    if (actionType === "cancelar") {
+      const motivoCancelacion = getString(formData, "motivoCancelacion");
+
+      if (!motivoCancelacion) {
+        throw new Error("Ingresa el motivo de cancelacion.");
+      }
+
+      const { error } = await supabase.rpc("cancelar_pedido_mayorista", {
+        p_pedido_id: pedidoId,
+        p_motivo_cancelacion: motivoCancelacion,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      revalidatePath("/admin");
+      revalidatePath("/admin/pedidos");
+      revalidatePath("/admin/reportes");
+      revalidatePath("/admin/productos");
+      revalidatePath("/admin/stock");
+      revalidatePath("/mayorista");
+
+      return {
+        ok: true,
+        message: `Pedido #${pedidoId.slice(0, 8)} cancelado y stock repuesto.`,
       };
     }
 

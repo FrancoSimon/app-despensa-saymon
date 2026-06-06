@@ -37,6 +37,7 @@ const statusLabels: Record<WholesaleOrderStatus, string> = {
   confirmado: "Confirmado",
   entregado: "Entregado",
   rechazado: "Rechazado",
+  cancelado: "Cancelado",
 };
 
 function money(value: number) {
