@@ -29,6 +29,14 @@ function mapCustomer(row: CustomerRow): Customer {
   };
 }
 
+function isMissingExtendedCustomerColumn(error: { code?: string; message?: string }) {
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    error.message?.includes("schema cache") === true
+  );
+}
+
 export async function createQuickCustomerAction(
   input: Pick<
     Customer,
@@ -62,26 +70,42 @@ export async function createQuickCustomerAction(
   }
 
   const supabase = await createClient();
+  const payload = {
+    nombre,
+    telefono,
+    email,
+    razon_social: razonSocial,
+    documento_tipo: documentoTipo,
+    documento_numero: documentoNumero,
+    condicion_iva: condicionIva,
+    direccion,
+    localidad,
+    notas,
+  };
   const { data, error } = await supabase
     .from("clientes")
-    .insert({
-      nombre,
-      telefono,
-      email,
-      razon_social: razonSocial,
-      documento_tipo: documentoTipo,
-      documento_numero: documentoNumero,
-      condicion_iva: condicionIva,
-      direccion,
-      localidad,
-      notas,
-    })
+    .insert(payload)
     .select(
       "id, nombre, telefono, email, razon_social, documento_tipo, documento_numero, condicion_iva, direccion, localidad, notas, activo, created_at, updated_at",
     )
     .single<CustomerRow>();
 
   if (error) {
+    if (isMissingExtendedCustomerColumn(error)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("clientes")
+        .insert({ nombre, telefono, email, notas })
+        .select("id, nombre, telefono, email, notas, activo, created_at, updated_at")
+        .single<CustomerRow>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      revalidatePath("/vendedor");
+      return mapCustomer(fallbackData);
+    }
+
     throw new Error(error.message);
   }
 
