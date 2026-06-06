@@ -48,6 +48,8 @@ export default async function AdminSalesPage({
   const { estado } = await searchParams;
   const status = isAdminSaleStatusFilter(estado) ? estado : "todas";
   const sales = await listAdminSales(status);
+  const returnHref =
+    status === "todas" ? "/admin/ventas" : `/admin/ventas?estado=${status}`;
 
   return (
     <AppShell profile={profile} title="Ventas mostrador">
@@ -129,7 +131,7 @@ export default async function AdminSalesPage({
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={`/vendedor/ventas/${sale.id}/ticket`}
+                      href={`/vendedor/ventas/${sale.id}/ticket?volver=${encodeURIComponent(returnHref)}`}
                       className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
                     >
                       Ver ticket

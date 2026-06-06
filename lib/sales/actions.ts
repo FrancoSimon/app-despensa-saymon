@@ -95,6 +95,7 @@ export async function cancelCounterSaleAction(formData: FormData) {
 
   const ventaId = formData.get("ventaId");
   const motivo = formData.get("motivo");
+  const volver = formData.get("volver");
 
   if (typeof ventaId !== "string" || !ventaId) {
     throw new Error("Venta invalida.");
@@ -120,5 +121,11 @@ export async function cancelCounterSaleAction(formData: FormData) {
   revalidatePath("/admin/productos");
   revalidatePath("/admin/stock");
   revalidatePath(`/vendedor/ventas/${ventaId}/ticket`);
-  redirect(`/vendedor/ventas/${ventaId}/ticket`);
+
+  const returnTo =
+    typeof volver === "string" && volver.startsWith("/admin/ventas")
+      ? `?volver=${encodeURIComponent(volver)}`
+      : "";
+
+  redirect(`/vendedor/ventas/${ventaId}/ticket${returnTo}`);
 }

@@ -15,6 +15,9 @@ type SaleTicketPageProps = {
   params: Promise<{
     id: string;
   }>;
+  searchParams: Promise<{
+    volver?: string;
+  }>;
 };
 
 function money(value: number) {
@@ -69,7 +72,18 @@ function buildWhatsAppMessage(ticket: SaleTicket) {
   return lines.join("\n");
 }
 
-export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
+function getBackHref(value: string | undefined, role: string) {
+  if (role === "admin" && value?.startsWith("/admin/ventas")) {
+    return value;
+  }
+
+  return "/vendedor";
+}
+
+export default async function SaleTicketPage({
+  params,
+  searchParams,
+}: SaleTicketPageProps) {
   await connection();
 
   if (!getSupabaseEnv()) {
@@ -83,6 +97,8 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
   }
 
   const { id } = await params;
+  const { volver } = await searchParams;
+  const backHref = getBackHref(volver, profile.rol);
   const ticket = await getSaleTicket(id);
 
   if (!ticket) {
@@ -95,7 +111,7 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
     <main className="min-h-dvh bg-zinc-950 px-4 py-6 text-zinc-950 print:bg-white print:p-0">
       <div className="mx-auto mb-5 flex max-w-sm flex-wrap items-center justify-between gap-3 text-white print:hidden">
         <Link
-          href="/vendedor"
+          href={backHref}
           className="rounded-md border border-white/15 px-4 py-3 text-sm font-bold transition hover:border-lime-300"
         >
           Volver
@@ -210,6 +226,7 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
           className="mx-auto mt-5 grid max-w-sm gap-3 rounded-lg border border-red-400/30 bg-black p-4 text-white print:hidden"
         >
           <input type="hidden" name="ventaId" value={ticket.id} />
+          <input type="hidden" name="volver" value={backHref} />
           <label className="text-sm font-bold text-red-100">
             Motivo de anulacion
             <textarea
