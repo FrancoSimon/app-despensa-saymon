@@ -6,6 +6,7 @@ import { createReportDateRange } from "@/lib/reports/dates";
 import {
   getCashRegisterReportSummary,
   getCanceledSalesCount,
+  getCurrentAccountReportSummary,
   getSalesSummary,
   listCashRegisterReportRows,
   listBestSellingProducts,
@@ -66,6 +67,7 @@ export default async function AdminReportsPage({
     canceledSalesCount,
     cashRegisterSummary,
     cashRegisterRows,
+    currentAccountSummary,
   ] = await Promise.all([
     getSalesSummary(range),
     listDailySales(range),
@@ -75,6 +77,7 @@ export default async function AdminReportsPage({
     getCanceledSalesCount(range),
     getCashRegisterReportSummary(range),
     listCashRegisterReportRows(range),
+    getCurrentAccountReportSummary(range),
   ]);
   const reportsReturnHref = `/admin/reportes?desde=${range.from}&hasta=${range.to}`;
   const encodedReportsReturnHref = encodeURIComponent(reportsReturnHref);
@@ -246,6 +249,61 @@ export default async function AdminReportsPage({
           </p>
         </article>
       </div>
+
+      <section className="mt-6 rounded-lg border border-white/10 bg-black p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black text-white">Cuenta corriente</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Totales separados del cierre de caja.
+            </p>
+          </div>
+          <Link
+            href="/admin/cuentas-corrientes"
+            className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+          >
+            Ver cuentas
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <article className="rounded-lg border border-white/10 bg-zinc-950 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+              Productos vendidos
+            </p>
+            <p className="mt-3 text-2xl font-black text-lime-300">
+              {currentAccountSummary.soldUnits}
+            </p>
+            <p className="mt-1 text-sm text-zinc-500">Unidades a cuenta</p>
+          </article>
+          <article className="rounded-lg border border-white/10 bg-zinc-950 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+              Monto total
+            </p>
+            <p className="mt-3 text-2xl font-black text-white">
+              {money(currentAccountSummary.salesTotal)}
+            </p>
+            <p className="mt-1 text-sm text-zinc-500">Ventas a cuenta</p>
+          </article>
+          <article className="rounded-lg border border-white/10 bg-zinc-950 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+              Pagos
+            </p>
+            <p className="mt-3 text-2xl font-black text-white">
+              {money(currentAccountSummary.paymentsTotal)}
+            </p>
+            <p className="mt-1 text-sm text-zinc-500">Registrados en periodo</p>
+          </article>
+          <article className="rounded-lg border border-white/10 bg-zinc-950 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+              Deudas
+            </p>
+            <p className="mt-3 text-2xl font-black text-yellow-200">
+              {money(currentAccountSummary.pendingDebtTotal)}
+            </p>
+            <p className="mt-1 text-sm text-zinc-500">Saldo pendiente actual</p>
+          </article>
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">

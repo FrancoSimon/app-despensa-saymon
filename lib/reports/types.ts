@@ -16,6 +16,13 @@ export type SalesSummary = {
   transferTotal: number;
 };
 
+export type CurrentAccountReportSummary = {
+  soldUnits: number;
+  salesTotal: number;
+  paymentsTotal: number;
+  pendingDebtTotal: number;
+};
+
 export type CashRegisterReportSummary = {
   count: number;
   openCount: number;
@@ -77,6 +84,20 @@ export type SaleItemReportRow = {
   producto_nombre: string;
   cantidad: number;
   subtotal: number | string;
+};
+
+export type CurrentAccountSaleItemReportRow = SaleItemReportRow & {
+  ventas: {
+    fecha: string;
+    estado?: string;
+    forma_pago: PaymentMethod;
+  };
+};
+
+export type CurrentAccountMovementReportRow = {
+  tipo: "venta" | "pago";
+  monto: number | string;
+  created_at: string;
 };
 
 export type CashRegisterReportDbRow = {

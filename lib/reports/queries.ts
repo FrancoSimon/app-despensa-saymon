@@ -6,6 +6,9 @@ import type {
   CashRegisterReportDbRow,
   CashRegisterReportRow,
   CashRegisterReportSummary,
+  CurrentAccountMovementReportRow,
+  CurrentAccountReportSummary,
+  CurrentAccountSaleItemReportRow,
   DailySalesRow,
   LowStockReportRow,
   ReportDateRange,
@@ -46,6 +49,15 @@ function emptyCashRegisterSummary(): CashRegisterReportSummary {
     cashDifferenceTotal: 0,
     incomeMovementsTotal: 0,
     withdrawalMovementsTotal: 0,
+  };
+}
+
+function emptyCurrentAccountSummary(): CurrentAccountReportSummary {
+  return {
+    soldUnits: 0,
+    salesTotal: 0,
+    paymentsTotal: 0,
+    pendingDebtTotal: 0,
   };
 }
 
@@ -293,6 +305,94 @@ export async function listBestSellingProducts(range: ReportDateRange) {
 
     return b.total - a.total;
   });
+}
+
+export async function getCurrentAccountReportSummary(range: ReportDateRange) {
+  const supabase = await createClient();
+  const [salesResult, paymentsResult, debtResult] = await Promise.all([
+    supabase
+      .from("venta_items")
+      .select(
+        `
+          producto_id,
+          producto_nombre,
+          cantidad,
+          subtotal,
+          ventas!inner (
+            fecha,
+            estado,
+            forma_pago
+          )
+        `,
+      )
+      .eq("ventas.estado", "activa")
+      .eq("ventas.forma_pago", "cuenta_corriente")
+      .gte("ventas.fecha", range.fromIso)
+      .lt("ventas.fecha", range.toIsoExclusive)
+      .returns<CurrentAccountSaleItemReportRow[]>(),
+    supabase
+      .from("cliente_cuenta_movimientos")
+      .select("tipo, monto, created_at")
+      .eq("tipo", "pago")
+      .gte("created_at", range.fromIso)
+      .lt("created_at", range.toIsoExclusive)
+      .returns<CurrentAccountMovementReportRow[]>(),
+    supabase
+      .from("cliente_cuenta_movimientos")
+      .select("tipo, monto, created_at")
+      .returns<CurrentAccountMovementReportRow[]>(),
+  ]);
+
+  if (salesResult.error) {
+    if (
+      salesResult.error.code !== "42P01" &&
+      salesResult.error.code !== "PGRST205"
+    ) {
+      throw new Error(salesResult.error.message);
+    }
+
+    return emptyCurrentAccountSummary();
+  }
+
+  const summary = salesResult.data.reduce<CurrentAccountReportSummary>(
+    (totals, item) => ({
+      ...totals,
+      soldUnits: totals.soldUnits + item.cantidad,
+      salesTotal: totals.salesTotal + toNumber(item.subtotal),
+    }),
+    emptyCurrentAccountSummary(),
+  );
+
+  if (paymentsResult.error) {
+    if (
+      paymentsResult.error.code !== "42P01" &&
+      paymentsResult.error.code !== "PGRST205"
+    ) {
+      throw new Error(paymentsResult.error.message);
+    }
+  } else {
+    summary.paymentsTotal = paymentsResult.data.reduce(
+      (total, movement) => total + toNumber(movement.monto),
+      0,
+    );
+  }
+
+  if (debtResult.error) {
+    if (
+      debtResult.error.code !== "42P01" &&
+      debtResult.error.code !== "PGRST205"
+    ) {
+      throw new Error(debtResult.error.message);
+    }
+  } else {
+    summary.pendingDebtTotal = debtResult.data.reduce((total, movement) => {
+      const amount = toNumber(movement.monto);
+
+      return total + (movement.tipo === "venta" ? amount : -amount);
+    }, 0);
+  }
+
+  return summary;
 }
 
 export async function getCanceledSalesCount(range: ReportDateRange) {
