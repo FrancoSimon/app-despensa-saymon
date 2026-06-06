@@ -37,6 +37,11 @@ export default async function AdminPage() {
           href="/admin/ventas"
         />
         <ModuleCard
+          title="Cajas"
+          description="Aperturas, cierres y diferencias por operador."
+          href="/admin/cajas"
+        />
+        <ModuleCard
           title="Productos"
           description="Alta, precios, stock minimo, imagenes y activacion mayorista."
           href="/admin/productos"

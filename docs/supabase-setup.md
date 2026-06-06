@@ -171,3 +171,13 @@ supabase/migrations/20260605070000_add_wholesale_order_cancellation.sql
 ```
 
 This adds the `cancelado` wholesale order state and the `cancelar_pedido_mayorista` RPC used to cancel confirmed wholesale orders, restore stock, and record stock entry movements.
+
+## 16. Apply the cash register migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260606000000_create_cash_register_shifts.sql
+```
+
+This creates cash register shifts, links counter sales to the open cash register, and adds the `abrir_caja` and `cerrar_caja` RPCs.

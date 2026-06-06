@@ -75,6 +75,8 @@ export async function confirmCounterSaleAction(
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
   revalidatePath("/admin/stock");
+  revalidatePath("/vendedor/caja");
+  revalidatePath("/admin/cajas");
 
   return {
     ventaId: data.venta_id,
@@ -120,6 +122,8 @@ export async function cancelCounterSaleAction(formData: FormData) {
   revalidatePath("/admin/reportes");
   revalidatePath("/admin/productos");
   revalidatePath("/admin/stock");
+  revalidatePath("/vendedor/caja");
+  revalidatePath("/admin/cajas");
   revalidatePath(`/vendedor/ventas/${ventaId}/ticket`);
 
   const returnTo =

@@ -26,6 +26,7 @@ type Ticket = ConfirmSaleResult & {
 
 type PosTerminalProps = {
   products: Product[];
+  hasOpenCashRegister: boolean;
 };
 
 function money(value: number) {
@@ -46,7 +47,7 @@ function clampPercentage(value: string) {
   return Math.min(100, Math.max(0, number));
 }
 
-export function PosTerminal({ products }: PosTerminalProps) {
+export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps) {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState(0);
@@ -130,6 +131,11 @@ export function PosTerminal({ products }: PosTerminalProps) {
     setError(null);
     setTicket(null);
 
+    if (!hasOpenCashRegister) {
+      setError("Abri una caja antes de confirmar ventas.");
+      return;
+    }
+
     const ticketItems = cart.map((item) => ({ ...item }));
 
     startTransition(async () => {
@@ -166,6 +172,20 @@ export function PosTerminal({ products }: PosTerminalProps) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      {!hasOpenCashRegister ? (
+        <div className="rounded-lg border border-yellow-300/30 bg-yellow-950/20 p-4 xl:col-span-2">
+          <p className="font-bold text-yellow-100">Caja sin abrir</p>
+          <p className="mt-1 text-sm text-yellow-100/80">
+            Para confirmar ventas mostrador primero abri una caja.
+          </p>
+          <Link
+            href="/vendedor/caja"
+            className="mt-3 inline-block rounded-md bg-lime-300 px-4 py-2 text-sm font-black text-black transition hover:bg-lime-200"
+          >
+            Ir a caja
+          </Link>
+        </div>
+      ) : null}
       <section className="rounded-lg border border-white/10 bg-black p-5">
         <BarcodeScanner products={products} onProductScanned={addProduct} />
 
@@ -366,7 +386,7 @@ export function PosTerminal({ products }: PosTerminalProps) {
           <button
             type="button"
             onClick={confirmSale}
-            disabled={cart.length === 0 || isPending}
+            disabled={cart.length === 0 || isPending || !hasOpenCashRegister}
             className="rounded-md bg-lime-300 px-5 py-4 font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending ? "Confirmando..." : "Confirmar venta"}
