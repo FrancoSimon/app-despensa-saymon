@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
 import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
 import { requireSellerProfile } from "@/lib/auth/require-admin";
+import { businessInfo, getBusinessReceiptLines } from "@/lib/business-info";
 import { cancelCounterSaleAction } from "@/lib/sales/actions";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import type { SaleTicket } from "@/lib/sales/types";
@@ -42,6 +43,19 @@ function shortId(value: string) {
   return value.slice(0, 8).toUpperCase();
 }
 
+function compactId(value: string) {
+  return value.replaceAll("-", "").slice(0, 6).toUpperCase();
+}
+
+function formatReceiptNumber(ticket: SaleTicket) {
+  const date = new Date(ticket.fecha);
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+
+  return `SAY-${year}${month}${day}-${compactId(ticket.id)}`;
+}
+
 function statusLabel(ticket: SaleTicket) {
   return ticket.estado === "anulada" ? "Anulada" : "Activa";
 }
@@ -51,13 +65,17 @@ function adjustmentLabel(label: string, percentage: number) {
 }
 
 function buildWhatsAppMessage(ticket: SaleTicket) {
+  const receiptNumber = formatReceiptNumber(ticket);
+  const businessLines = getBusinessReceiptLines();
   const lines = [
     ticket.estado === "anulada"
-      ? "Comercio SAYMON - Comprobante interno ANULADO"
-      : "Comercio SAYMON - Comprobante interno",
-    "No valido como factura",
+      ? `${businessInfo.name} - ${businessInfo.receiptTitle} ANULADO`
+      : `${businessInfo.name} - ${businessInfo.receiptTitle}`,
+    businessInfo.nonFiscalNotice,
+    ...businessLines,
     "",
-    `Venta: #${shortId(ticket.id)}`,
+    `Comprobante: ${receiptNumber}`,
+    `Venta ID: #${shortId(ticket.id)}`,
     ...(ticket.cajaId ? [`Caja: #${shortId(ticket.cajaId)}`] : []),
     `Estado: ${statusLabel(ticket)}`,
     `Fecha: ${formatDateTime(ticket.fecha)}`,
@@ -87,7 +105,7 @@ function buildWhatsAppMessage(ticket: SaleTicket) {
     )}`,
     `Total: ${money(ticket.total)}`,
     "",
-    "Registro interno sin validez fiscal",
+    businessInfo.footerNotice,
   ];
 
   return lines.join("\n");
@@ -129,11 +147,21 @@ export default async function SaleTicketPage({
     notFound();
   }
 
+  const receiptNumber = formatReceiptNumber(ticket);
+  const businessLines = getBusinessReceiptLines();
   const whatsAppMessage = buildWhatsAppMessage(ticket);
 
   return (
-    <main className="min-h-dvh bg-zinc-950 px-4 py-6 text-zinc-950 print:bg-white print:p-0">
-      <div className="mx-auto mb-5 flex max-w-sm flex-wrap items-center justify-between gap-3 text-white print:hidden">
+    <main className="min-h-dvh bg-zinc-950 px-4 py-6 text-zinc-950 print:min-h-0 print:bg-white print:p-0">
+      <style>{`
+        @media print {
+          @page {
+            size: 80mm 297mm;
+            margin: 0;
+          }
+        }
+      `}</style>
+      <div className="mx-auto mb-5 flex max-w-[80mm] flex-wrap items-center justify-between gap-3 text-white print:hidden">
         <Link
           href={backHref}
           className="rounded-md border border-white/15 px-4 py-3 text-sm font-bold transition hover:border-lime-300"
@@ -146,24 +174,29 @@ export default async function SaleTicketPage({
         </div>
       </div>
 
-      <article className="mx-auto max-w-sm bg-white p-6 font-mono text-sm shadow-2xl print:max-w-none print:shadow-none">
-        <header className="border-b border-dashed border-zinc-400 pb-4 text-center">
+      <article className="mx-auto w-full max-w-[80mm] bg-white p-[5mm] font-mono text-[12px] leading-tight shadow-2xl print:w-[80mm] print:max-w-[80mm] print:p-[4mm] print:text-[11px] print:shadow-none">
+        <header className="border-b border-dashed border-zinc-400 pb-3 text-center">
           <Image
             src="/logo-saymon.jpeg"
-            alt="Logo SAYMON"
-            width={72}
-            height={72}
-            className="mx-auto size-18 rounded-full object-cover grayscale"
+            alt={`Logo ${businessInfo.shortName}`}
+            width={58}
+            height={58}
+            className="mx-auto size-[58px] rounded-full object-cover grayscale"
           />
-          <h1 className="mt-3 text-2xl font-black tracking-wide">
-            Comercio SAYMON
+          <h1 className="mt-2 text-xl font-black tracking-wide">
+            {businessInfo.name}
           </h1>
           <p className="mt-1 text-xs uppercase tracking-wide">
-            Comprobante interno
+            {businessInfo.receiptTitle}
           </p>
-          <p className="mt-2 text-[11px] font-bold uppercase">
-            No valido como factura
+          <p className="mt-1 text-[10px] font-bold uppercase">
+            {businessInfo.nonFiscalNotice}
           </p>
+          {businessLines.map((line) => (
+            <p key={line} className="mt-1 text-[10px] uppercase">
+              {line}
+            </p>
+          ))}
           {ticket.estado === "anulada" ? (
             <p className="mt-3 border border-zinc-900 px-2 py-1 text-xs font-black uppercase">
               Venta anulada
@@ -171,9 +204,13 @@ export default async function SaleTicketPage({
           ) : null}
         </header>
 
-        <section className="border-b border-dashed border-zinc-400 py-4">
+        <section className="border-b border-dashed border-zinc-400 py-3">
+          <div className="grid grid-cols-[auto_1fr] gap-2 text-sm font-black">
+            <span>Comprobante</span>
+            <strong className="text-right">{receiptNumber}</strong>
+          </div>
           <div className="flex justify-between gap-4">
-            <span>Venta</span>
+            <span>Venta ID</span>
             <strong>#{shortId(ticket.id)}</strong>
           </div>
           {ticket.cajaId ? (
@@ -214,12 +251,12 @@ export default async function SaleTicketPage({
           ) : null}
         </section>
 
-        <section className="border-b border-dashed border-zinc-400 py-4">
-          <div className="mb-3 grid grid-cols-[1fr_3.5rem] gap-3 border-b border-zinc-300 pb-2 text-[11px] font-bold uppercase tracking-wide">
+        <section className="border-b border-dashed border-zinc-400 py-3">
+          <div className="mb-2 grid grid-cols-[1fr_3.5rem] gap-3 border-b border-zinc-300 pb-2 text-[10px] font-bold uppercase tracking-wide">
             <span>Detalle</span>
             <span className="text-right">Importe</span>
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-2">
             {ticket.items.map((item) => (
               <div key={item.id}>
                 <div className="font-bold">{item.productoNombre}</div>
@@ -234,7 +271,7 @@ export default async function SaleTicketPage({
           </div>
         </section>
 
-        <section className="border-b border-dashed border-zinc-400 py-4">
+        <section className="border-b border-dashed border-zinc-400 py-3">
           <div className="flex justify-between gap-4">
             <span>Subtotal</span>
             <strong>{money(ticket.subtotal)}</strong>
@@ -255,10 +292,10 @@ export default async function SaleTicketPage({
           </div>
         </section>
 
-        <footer className="pt-4 text-center text-[11px] uppercase leading-5">
+        <footer className="pt-3 text-center text-[10px] uppercase leading-4">
           <p>Gracias por su compra</p>
-          <p>Comercio SAYMON</p>
-          <p>Registro interno sin validez fiscal</p>
+          <p>{businessInfo.name}</p>
+          <p>{businessInfo.footerNotice}</p>
         </footer>
       </article>
 
