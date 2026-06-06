@@ -25,6 +25,15 @@ export default async function AdminProductsPage({
 
   return (
     <AppShell profile={profile} title="Productos">
+      <div className="mb-5">
+        <Link
+          href="/admin"
+          className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
+        >
+          Volver al panel
+        </Link>
+      </div>
+
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <form className="flex w-full gap-2 sm:max-w-md">
           <input
@@ -139,4 +148,3 @@ export default async function AdminProductsPage({
     </AppShell>
   );
 }
-
