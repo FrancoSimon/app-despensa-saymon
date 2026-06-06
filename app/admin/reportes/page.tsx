@@ -249,7 +249,18 @@ export default async function AdminReportsPage({
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
-          <h2 className="text-xl font-black text-white">Ventas por dia</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-black text-white">Ventas por dia</h2>
+            <CsvExportButton
+              columns={[
+                { header: "Dia", value: (row) => dateLabel(row.date) },
+                { header: "Ventas", value: (row) => row.count },
+                { header: "Total", value: (row) => row.total },
+              ]}
+              rows={dailySales}
+              fileName={`ventas-por-dia-${range.from}-${range.to}.csv`}
+            />
+          </div>
           <div className="mt-4 overflow-hidden rounded-md border border-white/10">
             <table className="w-full border-collapse text-left text-sm">
               <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
@@ -287,6 +298,11 @@ export default async function AdminReportsPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-black text-white">Mas vendidos</h2>
             <CsvExportButton
+              columns={[
+                { header: "Producto", value: (row) => row.productName },
+                { header: "Cantidad", value: (row) => row.quantity },
+                { header: "Total", value: (row) => row.total },
+              ]}
               rows={bestSellers}
               fileName={`mas-vendidos-${range.from}-${range.to}.csv`}
             />
@@ -328,12 +344,30 @@ export default async function AdminReportsPage({
       <section className="mt-6 rounded-lg border border-white/10 bg-black p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-black text-white">Cajas del periodo</h2>
-          <Link
-            href={cashRegistersHref}
-            className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
-          >
-            Ver todas
-          </Link>
+          <div className="flex items-center gap-2">
+            <CsvExportButton
+              columns={[
+                { header: "Caja", value: (row) => row.id },
+                { header: "Operador", value: (row) => row.operatorName },
+                { header: "Estado", value: (row) => row.status },
+                { header: "Apertura", value: (row) => dateTimeLabel(row.openedAt) },
+                { header: "Cierre", value: (row) => dateTimeLabel(row.closedAt) },
+                { header: "Cantidad ventas", value: (row) => row.salesCount },
+                { header: "Total ventas", value: (row) => row.salesTotal },
+                { header: "Efectivo esperado", value: (row) => row.expectedCash },
+                { header: "Efectivo contado", value: (row) => row.countedCash },
+                { header: "Diferencia", value: (row) => row.cashDifference },
+              ]}
+              rows={cashRegisterRows}
+              fileName={`cajas-${range.from}-${range.to}.csv`}
+            />
+            <Link
+              href={cashRegistersHref}
+              className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+            >
+              Ver todas
+            </Link>
+          </div>
         </div>
         <div className="mt-4 overflow-x-auto rounded-md border border-white/10">
           <table className="w-full min-w-[920px] border-collapse text-left text-sm">
@@ -420,7 +454,21 @@ export default async function AdminReportsPage({
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
-          <h2 className="text-xl font-black text-white">Productos con stock bajo</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-black text-white">
+              Productos con stock bajo
+            </h2>
+            <CsvExportButton
+              columns={[
+                { header: "Producto", value: (row) => row.nombre },
+                { header: "Categoria", value: (row) => row.categoria },
+                { header: "Stock", value: (row) => row.stock },
+                { header: "Stock minimo", value: (row) => row.stockMinimo },
+              ]}
+              rows={lowStockProducts}
+              fileName={`stock-bajo-${range.from}-${range.to}.csv`}
+            />
+          </div>
           <div className="mt-4 grid gap-2">
             {lowStockProducts.map((product) => (
               <div

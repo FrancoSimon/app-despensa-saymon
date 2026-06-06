@@ -1,14 +1,20 @@
 "use client";
 
-import type { BestSellerRow } from "@/lib/reports/types";
+type CsvValue = string | number | null | undefined;
 
-type CsvExportButtonProps = {
-  rows: BestSellerRow[];
+type CsvColumn<T> = {
+  header: string;
+  value: (row: T) => CsvValue;
+};
+
+type CsvExportButtonProps<T> = {
+  columns: CsvColumn<T>[];
+  rows: T[];
   fileName: string;
 };
 
-function escapeCsv(value: string | number) {
-  const text = String(value);
+function escapeCsv(value: CsvValue) {
+  const text = value === null || value === undefined ? "" : String(value);
 
   if (text.includes(",") || text.includes('"') || text.includes("\n")) {
     return `"${text.replaceAll('"', '""')}"`;
@@ -17,11 +23,15 @@ function escapeCsv(value: string | number) {
   return text;
 }
 
-export function CsvExportButton({ rows, fileName }: CsvExportButtonProps) {
+export function CsvExportButton<T>({
+  columns,
+  rows,
+  fileName,
+}: CsvExportButtonProps<T>) {
   function downloadCsv() {
     const csv = [
-      ["Producto", "Cantidad", "Total"],
-      ...rows.map((row) => [row.productName, row.quantity, row.total]),
+      columns.map((column) => column.header),
+      ...rows.map((row) => columns.map((column) => column.value(row))),
     ]
       .map((line) => line.map(escapeCsv).join(","))
       .join("\n");
