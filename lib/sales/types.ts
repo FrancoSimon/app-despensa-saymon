@@ -15,6 +15,7 @@ export type ConfirmSaleInput = {
   descuentoPorcentaje: number;
   recargoPorcentaje: number;
   formaPago: PaymentMethod;
+  clienteId?: string | null;
 };
 
 export type ConfirmSaleResult = {
@@ -49,6 +50,7 @@ export type SaleTicketRow = {
   id: string;
   vendedor_id: string;
   caja_id?: string | null;
+  cliente_id?: string | null;
   fecha: string;
   estado?: SaleStatus;
   anulada_at?: string | null;
@@ -60,6 +62,11 @@ export type SaleTicketRow = {
   total: number | string;
   profiles: {
     nombre: string;
+  } | null;
+  clientes?: {
+    nombre: string;
+    telefono: string | null;
+    email: string | null;
   } | null;
   venta_items: SaleTicketItemRow[];
 };
@@ -88,6 +95,9 @@ export type SaleTicket = {
   recargoMonto: number;
   total: number;
   vendedorNombre: string;
+  clienteNombre: string | null;
+  clienteTelefono: string | null;
+  clienteEmail: string | null;
   items: SaleTicketItem[];
 };
 

@@ -41,6 +41,11 @@ export async function confirmCounterSaleAction(
     throw new Error("Forma de pago invalida.");
   }
 
+  const clienteId =
+    typeof input.clienteId === "string" && input.clienteId.trim()
+      ? input.clienteId.trim()
+      : null;
+
   const items = input.items.map((item) => {
     if (
       typeof item.productoId !== "string" ||
@@ -64,6 +69,7 @@ export async function confirmCounterSaleAction(
       p_descuento_porcentaje: input.descuentoPorcentaje,
       p_recargo_porcentaje: input.recargoPorcentaje,
       p_forma_pago: input.formaPago,
+      p_cliente_id: clienteId,
     })
     .single<ConfirmSaleRpcRow>();
 

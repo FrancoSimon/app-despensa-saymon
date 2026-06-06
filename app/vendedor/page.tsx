@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PosTerminal } from "@/components/pos/pos-terminal";
 import { requireSellerProfile } from "@/lib/auth/require-admin";
 import { getCurrentCashRegister } from "@/lib/cash/queries";
+import { listActiveCustomers } from "@/lib/customers/queries";
 import { listPosProducts } from "@/lib/products/pos-queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
@@ -35,8 +36,9 @@ export default async function SellerPage() {
 
   const profile = await requireSellerProfile();
 
-  const [products, cashRegister] = await Promise.all([
+  const [products, customers, cashRegister] = await Promise.all([
     listPosProducts(),
+    listActiveCustomers(),
     getCurrentCashRegister(),
   ]);
 
@@ -67,7 +69,11 @@ export default async function SellerPage() {
           {cashRegister ? "Cerrar caja" : "Abrir caja"}
         </Link>
       </section>
-      <PosTerminal products={products} hasOpenCashRegister={!!cashRegister} />
+      <PosTerminal
+        products={products}
+        customers={customers}
+        hasOpenCashRegister={!!cashRegister}
+      />
     </AppShell>
   );
 }

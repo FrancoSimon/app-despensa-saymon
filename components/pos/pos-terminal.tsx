@@ -4,12 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
+import { createQuickCustomerAction } from "@/lib/customers/actions";
 import { confirmCounterSaleAction } from "@/lib/sales/actions";
 import {
   paymentMethodLabels,
   paymentMethodOptions,
 } from "@/lib/sales/payment-methods";
 import type { ConfirmSaleResult, PaymentMethod } from "@/lib/sales/types";
+import type { Customer } from "@/lib/customers/types";
 import type { Product } from "@/lib/products/types";
 
 type CartItem = {
@@ -22,10 +24,12 @@ type Ticket = ConfirmSaleResult & {
   descuentoPorcentaje: number;
   recargoPorcentaje: number;
   formaPago: PaymentMethod;
+  clienteNombre: string | null;
 };
 
 type PosTerminalProps = {
   products: Product[];
+  customers: Customer[];
   hasOpenCashRegister: boolean;
 };
 
@@ -47,15 +51,24 @@ function clampPercentage(value: string) {
   return Math.min(100, Math.max(0, number));
 }
 
-export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps) {
+export function PosTerminal({
+  products,
+  customers,
+  hasOpenCashRegister,
+}: PosTerminalProps) {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [customerOptions, setCustomerOptions] = useState(customers);
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState("");
   const [discount, setDiscount] = useState(0);
   const [surcharge, setSurcharge] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("efectivo");
   const [error, setError] = useState<string | null>(null);
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isCreatingCustomer, startCustomerTransition] = useTransition();
 
   const results = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -89,6 +102,9 @@ export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps)
   const discountAmount = subtotal * (discount / 100);
   const surchargeAmount = (subtotal - discountAmount) * (surcharge / 100);
   const total = subtotal - discountAmount + surchargeAmount;
+  const selectedCustomer =
+    customerOptions.find((customer) => customer.id === selectedCustomerId) ??
+    null;
 
   function addProduct(product: Product) {
     setTicket(null);
@@ -148,6 +164,7 @@ export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps)
           descuentoPorcentaje: discount,
           recargoPorcentaje: surcharge,
           formaPago: paymentMethod,
+          clienteId: selectedCustomerId || null,
         });
 
         setTicket({
@@ -156,15 +173,43 @@ export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps)
           descuentoPorcentaje: discount,
           recargoPorcentaje: surcharge,
           formaPago: paymentMethod,
+          clienteNombre: selectedCustomer?.nombre ?? null,
         });
         setCart([]);
         setDiscount(0);
         setSurcharge(0);
+        setSelectedCustomerId("");
       } catch (saleError) {
         setError(
           saleError instanceof Error
             ? saleError.message
             : "No se pudo confirmar la venta.",
+        );
+      }
+    });
+  }
+
+  function createCustomer() {
+    setError(null);
+
+    startCustomerTransition(async () => {
+      try {
+        const customer = await createQuickCustomerAction({
+          nombre: newCustomerName,
+          telefono: newCustomerPhone,
+          email: null,
+          notas: null,
+        });
+
+        setCustomerOptions((current) => [...current, customer]);
+        setSelectedCustomerId(customer.id);
+        setNewCustomerName("");
+        setNewCustomerPhone("");
+      } catch (customerError) {
+        setError(
+          customerError instanceof Error
+            ? customerError.message
+            : "No se pudo crear el cliente.",
         );
       }
     });
@@ -316,6 +361,48 @@ export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps)
         </div>
 
         <div className="mt-5 grid gap-3">
+          <div className="rounded-md border border-white/10 bg-zinc-950 p-4">
+            <label className="text-sm font-semibold text-zinc-200">
+              Cliente opcional
+              <select
+                value={selectedCustomerId}
+                onChange={(event) => setSelectedCustomerId(event.target.value)}
+                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition focus:border-lime-300"
+              >
+                <option value="">Consumidor final</option>
+                {customerOptions.map((customer) => (
+                  <option key={customer.id} value={customer.id}>
+                    {customer.nombre}
+                    {customer.telefono ? ` - ${customer.telefono}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_0.8fr_auto]">
+              <input
+                value={newCustomerName}
+                onChange={(event) => setNewCustomerName(event.target.value)}
+                placeholder="Nuevo cliente"
+                className="h-10 rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-lime-300"
+              />
+              <input
+                value={newCustomerPhone}
+                onChange={(event) => setNewCustomerPhone(event.target.value)}
+                placeholder="Telefono"
+                className="h-10 rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-lime-300"
+              />
+              <button
+                type="button"
+                onClick={createCustomer}
+                disabled={isCreatingCustomer || !newCustomerName.trim()}
+                className="rounded-md border border-lime-300/70 px-3 py-2 text-sm font-black text-lime-100 transition hover:bg-lime-950 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isCreatingCustomer ? "Guardando..." : "Crear"}
+              </button>
+            </div>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-semibold text-zinc-200">
               Descuento %
@@ -436,6 +523,11 @@ export function PosTerminal({ products, hasOpenCashRegister }: PosTerminalProps)
               <p className="mt-2 text-zinc-500">
                 Forma de pago: {paymentMethodLabels[ticket.formaPago]}
               </p>
+              {ticket.clienteNombre ? (
+                <p className="mt-1 text-zinc-500">
+                  Cliente: {ticket.clienteNombre}
+                </p>
+              ) : null}
             </div>
             <Link
               href={`/vendedor/ventas/${ticket.ventaId}/ticket`}

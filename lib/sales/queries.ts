@@ -42,6 +42,9 @@ function mapSaleTicket(row: SaleTicketRow): SaleTicket {
     recargoMonto,
     total: toNumber(row.total),
     vendedorNombre: row.profiles?.nombre ?? "Mostrador",
+    clienteNombre: row.clientes?.nombre ?? null,
+    clienteTelefono: row.clientes?.telefono ?? null,
+    clienteEmail: row.clientes?.email ?? null,
     items: row.venta_items.map((item) => ({
       id: item.id,
       productoNombre: item.producto_nombre,
@@ -172,6 +175,7 @@ export async function getSaleTicket(id: string) {
         id,
         vendedor_id,
         caja_id,
+        cliente_id,
         fecha,
         estado,
         anulada_at,
@@ -183,6 +187,11 @@ export async function getSaleTicket(id: string) {
         total,
         profiles!ventas_vendedor_id_fkey (
           nombre
+        ),
+        clientes (
+          nombre,
+          telefono,
+          email
         ),
         venta_items (
           id,

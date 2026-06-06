@@ -80,6 +80,12 @@ function buildWhatsAppMessage(ticket: SaleTicket) {
     `Estado: ${statusLabel(ticket)}`,
     `Fecha: ${formatDateTime(ticket.fecha)}`,
     `Vendedor: ${ticket.vendedorNombre}`,
+    ...(ticket.clienteNombre
+      ? [
+          `Cliente: ${ticket.clienteNombre}`,
+          ...(ticket.clienteTelefono ? [`Tel cliente: ${ticket.clienteTelefono}`] : []),
+        ]
+      : []),
     `Pago: ${paymentMethodLabels[ticket.formaPago]}`,
     ...(ticket.estado === "anulada"
       ? [
@@ -231,6 +237,15 @@ export default async function SaleTicketPage({
             <span>Vendedor</span>
             <strong className="text-right">{ticket.vendedorNombre}</strong>
           </div>
+          {ticket.clienteNombre ? (
+            <div className="mt-1 flex justify-between gap-4">
+              <span>Cliente</span>
+              <strong className="text-right">
+                {ticket.clienteNombre}
+                {ticket.clienteTelefono ? ` - ${ticket.clienteTelefono}` : ""}
+              </strong>
+            </div>
+          ) : null}
           <div className="mt-1 flex justify-between gap-4">
             <span>Pago</span>
             <strong>{paymentMethodLabels[ticket.formaPago]}</strong>
