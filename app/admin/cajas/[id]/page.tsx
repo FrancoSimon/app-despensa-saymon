@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import {
   getCashRegisterById,
+  listCashRegisterMovements,
   listCashRegisterSales,
 } from "@/lib/cash/queries";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
@@ -44,14 +45,24 @@ export default async function AdminCashRegisterDetailPage({
 }: AdminCashRegisterDetailPageProps) {
   const profile = await requireAdminProfile();
   const { id } = await params;
-  const [cashRegister, sales] = await Promise.all([
+  const [cashRegister, sales, movements] = await Promise.all([
     getCashRegisterById(id),
     listCashRegisterSales(id),
+    listCashRegisterMovements(id),
   ]);
 
   if (!cashRegister) {
     notFound();
   }
+
+  const movementTotals = movements.reduce(
+    (totals, movement) => ({
+      ingresos:
+        totals.ingresos + (movement.tipo === "ingreso" ? movement.monto : 0),
+      retiros: totals.retiros + (movement.tipo === "retiro" ? movement.monto : 0),
+    }),
+    { ingresos: 0, retiros: 0 },
+  );
 
   return (
     <AppShell profile={profile} title={`Caja #${cashRegister.id.slice(0, 8)}`}>
@@ -75,6 +86,8 @@ export default async function AdminCashRegisterDetailPage({
           label="Efectivo esperado"
           value={money(cashRegister.efectivoEsperado)}
         />
+        <Metric label="Ingresos caja" value={money(movementTotals.ingresos)} />
+        <Metric label="Retiros caja" value={money(movementTotals.retiros)} />
         <Metric
           label="Diferencia"
           value={
@@ -108,6 +121,61 @@ export default async function AdminCashRegisterDetailPage({
             {cashRegister.observaciones}
           </p>
         ) : null}
+      </section>
+
+      <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-black">
+        <div className="border-b border-white/10 p-5">
+          <h2 className="text-xl font-black text-white">
+            Movimientos de efectivo
+          </h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+            <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
+              <tr>
+                <th className="px-4 py-3">Fecha</th>
+                <th className="px-4 py-3">Tipo</th>
+                <th className="px-4 py-3">Importe</th>
+                <th className="px-4 py-3">Operador</th>
+                <th className="px-4 py-3">Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movements.map((movement) => (
+                <tr key={movement.id} className="border-t border-white/10">
+                  <td className="px-4 py-4 text-zinc-300">
+                    {formatDateTime(movement.createdAt)}
+                  </td>
+                  <td className="px-4 py-4">
+                    <span
+                      className={
+                        movement.tipo === "ingreso"
+                          ? "rounded-md bg-lime-300 px-2 py-1 text-xs font-black uppercase text-black"
+                          : "rounded-md bg-yellow-200 px-2 py-1 text-xs font-black uppercase text-black"
+                      }
+                    >
+                      {movement.tipo}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 font-bold text-white">
+                    {money(movement.monto)}
+                  </td>
+                  <td className="px-4 py-4 text-zinc-300">
+                    {movement.operadorNombre}
+                  </td>
+                  <td className="px-4 py-4 text-zinc-300">{movement.motivo}</td>
+                </tr>
+              ))}
+              {movements.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center text-zinc-400">
+                    No hay movimientos de efectivo registrados.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="mt-6 overflow-hidden rounded-lg border border-white/10 bg-black">

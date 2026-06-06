@@ -22,6 +22,16 @@ function parseMoney(value: string) {
   return number;
 }
 
+function parsePositiveMoney(value: string) {
+  const number = parseMoney(value);
+
+  if (number <= 0) {
+    throw new Error("Importe invalido.");
+  }
+
+  return number;
+}
+
 export async function openCashRegisterAction(
   _previousState: CashRegisterActionState,
   formData: FormData,
@@ -53,6 +63,64 @@ export async function openCashRegisterAction(
     return {
       ok: false,
       message: error instanceof Error ? error.message : "No se pudo abrir caja.",
+    };
+  }
+}
+
+export async function registerCashMovementAction(
+  _previousState: CashRegisterActionState,
+  formData: FormData,
+): Promise<CashRegisterActionState> {
+  try {
+    const { profile } = await getCurrentProfile();
+
+    if (!profile || (profile.rol !== "admin" && profile.rol !== "vendedor")) {
+      throw new Error("No autorizado.");
+    }
+
+    const cajaId = getString(formData, "cajaId");
+    const tipo = getString(formData, "tipo");
+    const monto = parsePositiveMoney(getString(formData, "monto"));
+    const motivo = getString(formData, "motivo");
+
+    if (!cajaId) {
+      throw new Error("Caja invalida.");
+    }
+
+    if (tipo !== "ingreso" && tipo !== "retiro") {
+      throw new Error("Tipo de movimiento invalido.");
+    }
+
+    if (!motivo) {
+      throw new Error("Motivo requerido.");
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("registrar_movimiento_caja", {
+      p_caja_id: cajaId,
+      p_tipo: tipo,
+      p_monto: monto,
+      p_motivo: motivo,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/vendedor");
+    revalidatePath("/vendedor/caja");
+    revalidatePath("/admin");
+    revalidatePath("/admin/cajas");
+    revalidatePath(`/admin/cajas/${cajaId}`);
+
+    return { ok: true, message: "Movimiento registrado." };
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "No se pudo registrar el movimiento.",
     };
   }
 }
@@ -100,4 +168,3 @@ export async function closeCashRegisterAction(
     };
   }
 }
-

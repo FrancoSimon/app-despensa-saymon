@@ -4,7 +4,10 @@ import { connection } from "next/server";
 import { CashRegisterPanel } from "@/components/cash/cash-register-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { getCurrentCashRegister } from "@/lib/cash/queries";
+import {
+  getCurrentCashRegister,
+  listCashRegisterMovements,
+} from "@/lib/cash/queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 export default async function SellerCashRegisterPage() {
@@ -21,6 +24,9 @@ export default async function SellerCashRegisterPage() {
   }
 
   const cashRegister = await getCurrentCashRegister();
+  const movements = cashRegister
+    ? await listCashRegisterMovements(cashRegister.id)
+    : [];
 
   return (
     <AppShell profile={profile} title="Caja">
@@ -32,8 +38,7 @@ export default async function SellerCashRegisterPage() {
           Volver al mostrador
         </Link>
       </div>
-      <CashRegisterPanel cashRegister={cashRegister} />
+      <CashRegisterPanel cashRegister={cashRegister} movements={movements} />
     </AppShell>
   );
 }
-

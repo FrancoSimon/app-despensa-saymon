@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import type {
   CashRegister,
+  CashRegisterMovement,
+  CashRegisterMovementRow,
   CashRegisterRow,
   CashRegisterSale,
   CashRegisterSaleRow,
@@ -10,6 +12,11 @@ import type {
 type LiveTotalsRow = {
   forma_pago: string;
   total: number | string;
+};
+
+type MovementTotalsRow = {
+  tipo: string;
+  monto: number | string;
 };
 
 function toNumber(value: number | string | null) {
@@ -30,6 +37,8 @@ function mapCashRegister(row: CashRegisterRow): CashRegister {
     efectivoInicial: toNumber(row.efectivo_inicial) ?? 0,
     efectivoVentas: toNumber(row.efectivo_ventas) ?? 0,
     efectivoEsperado: toNumber(row.efectivo_esperado) ?? 0,
+    ingresosCaja: 0,
+    retirosCaja: 0,
     efectivoReal: toNumber(row.efectivo_real),
     diferenciaEfectivo: toNumber(row.diferencia_efectivo),
     qrTotal: toNumber(row.qr_total) ?? 0,
@@ -41,6 +50,21 @@ function mapCashRegister(row: CashRegisterRow): CashRegister {
     observaciones: row.observaciones,
     operadorNombre: row.profiles?.nombre ?? "Mostrador",
     operadorEmail: row.profiles?.email ?? "-",
+  };
+}
+
+function mapCashRegisterMovement(
+  row: CashRegisterMovementRow,
+): CashRegisterMovement {
+  return {
+    id: row.id,
+    cajaId: row.caja_id,
+    perfilId: row.perfil_id,
+    tipo: row.tipo,
+    monto: toNumber(row.monto) ?? 0,
+    motivo: row.motivo,
+    createdAt: row.created_at,
+    operadorNombre: row.profiles?.nombre ?? "Mostrador",
   };
 }
 
@@ -56,19 +80,59 @@ function mapCashRegisterSale(row: CashRegisterSaleRow): CashRegisterSale {
   };
 }
 
-async function getLiveTotals(cajaId: string, efectivoInicial: number) {
+async function getMovementTotals(cajaId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("ventas")
-    .select("forma_pago, total")
+    .from("caja_movimientos")
+    .select("tipo, monto")
     .eq("caja_id", cajaId)
-    .eq("estado", "activa")
-    .returns<LiveTotalsRow[]>();
+    .returns<MovementTotalsRow[]>();
+
+  if (error) {
+    return {
+      ingresosCaja: 0,
+      retirosCaja: 0,
+    };
+  }
+
+  return data.reduce(
+    (totals, row) => {
+      const monto = Number(row.monto);
+
+      return {
+        ingresosCaja:
+          totals.ingresosCaja + (row.tipo === "ingreso" ? monto : 0),
+        retirosCaja: totals.retirosCaja + (row.tipo === "retiro" ? monto : 0),
+      };
+    },
+    {
+      ingresosCaja: 0,
+      retirosCaja: 0,
+    },
+  );
+}
+
+async function getLiveTotals(cajaId: string, efectivoInicial: number) {
+  const supabase = await createClient();
+  const [{ data, error }, movementTotals] = await Promise.all([
+    supabase
+      .from("ventas")
+      .select("forma_pago, total")
+      .eq("caja_id", cajaId)
+      .eq("estado", "activa")
+      .returns<LiveTotalsRow[]>(),
+    getMovementTotals(cajaId),
+  ]);
 
   if (error) {
     return {
       efectivoVentas: 0,
-      efectivoEsperado: efectivoInicial,
+      efectivoEsperado:
+        efectivoInicial +
+        movementTotals.ingresosCaja -
+        movementTotals.retirosCaja,
+      ingresosCaja: movementTotals.ingresosCaja,
+      retirosCaja: movementTotals.retirosCaja,
       qrTotal: 0,
       tarjetaCreditoTotal: 0,
       tarjetaDebitoTotal: 0,
@@ -87,6 +151,8 @@ async function getLiveTotals(cajaId: string, efectivoInicial: number) {
           totals.efectivoVentas + (row.forma_pago === "efectivo" ? total : 0),
         efectivoEsperado:
           totals.efectivoEsperado + (row.forma_pago === "efectivo" ? total : 0),
+        ingresosCaja: totals.ingresosCaja,
+        retirosCaja: totals.retirosCaja,
         qrTotal: totals.qrTotal + (row.forma_pago === "qr" ? total : 0),
         tarjetaCreditoTotal:
           totals.tarjetaCreditoTotal +
@@ -103,7 +169,12 @@ async function getLiveTotals(cajaId: string, efectivoInicial: number) {
     },
     {
       efectivoVentas: 0,
-      efectivoEsperado: efectivoInicial,
+      efectivoEsperado:
+        efectivoInicial +
+        movementTotals.ingresosCaja -
+        movementTotals.retirosCaja,
+      ingresosCaja: movementTotals.ingresosCaja,
+      retirosCaja: movementTotals.retirosCaja,
       qrTotal: 0,
       tarjetaCreditoTotal: 0,
       tarjetaDebitoTotal: 0,
@@ -296,4 +367,37 @@ export async function listCashRegisterSales(cashRegisterId: string) {
   }
 
   return data.map(mapCashRegisterSale);
+}
+
+export async function listCashRegisterMovements(cashRegisterId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("caja_movimientos")
+    .select(
+      `
+        id,
+        caja_id,
+        perfil_id,
+        tipo,
+        monto,
+        motivo,
+        created_at,
+        profiles (
+          nombre
+        )
+      `,
+    )
+    .eq("caja_id", cashRegisterId)
+    .order("created_at", { ascending: false })
+    .returns<CashRegisterMovementRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map(mapCashRegisterMovement);
 }

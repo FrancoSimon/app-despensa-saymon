@@ -33,6 +33,8 @@ export type CashRegister = {
   efectivoInicial: number;
   efectivoVentas: number;
   efectivoEsperado: number;
+  ingresosCaja: number;
+  retirosCaja: number;
   efectivoReal: number | null;
   diferenciaEfectivo: number | null;
   qrTotal: number;
@@ -49,6 +51,32 @@ export type CashRegister = {
 export type CashRegisterActionState = {
   ok: boolean;
   message: string | null;
+};
+
+export type CashRegisterMovementType = "ingreso" | "retiro";
+
+export type CashRegisterMovementRow = {
+  id: string;
+  caja_id: string;
+  perfil_id: string;
+  tipo: CashRegisterMovementType;
+  monto: number | string;
+  motivo: string;
+  created_at: string;
+  profiles?: {
+    nombre: string;
+  } | null;
+};
+
+export type CashRegisterMovement = {
+  id: string;
+  cajaId: string;
+  perfilId: string;
+  tipo: CashRegisterMovementType;
+  monto: number;
+  motivo: string;
+  createdAt: string;
+  operadorNombre: string;
 };
 
 export type CashRegisterSaleRow = {
