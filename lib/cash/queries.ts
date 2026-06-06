@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import type { CashRegister, CashRegisterRow } from "@/lib/cash/types";
+import type {
+  CashRegister,
+  CashRegisterRow,
+  CashRegisterSale,
+  CashRegisterSaleRow,
+} from "@/lib/cash/types";
 
 type LiveTotalsRow = {
   forma_pago: string;
@@ -36,6 +41,18 @@ function mapCashRegister(row: CashRegisterRow): CashRegister {
     observaciones: row.observaciones,
     operadorNombre: row.profiles?.nombre ?? "Mostrador",
     operadorEmail: row.profiles?.email ?? "-",
+  };
+}
+
+function mapCashRegisterSale(row: CashRegisterSaleRow): CashRegisterSale {
+  return {
+    id: row.id,
+    fecha: row.fecha,
+    estado: row.estado ?? "activa",
+    formaPago: row.forma_pago,
+    total: toNumber(row.total) ?? 0,
+    motivoAnulacion: row.motivo_anulacion ?? null,
+    vendedorNombre: row.profiles?.nombre ?? "Mostrador",
   };
 }
 
@@ -204,4 +221,79 @@ export async function listRecentCashRegisters(limit = 30) {
   }
 
   return data.map(mapCashRegister);
+}
+
+export async function getCashRegisterById(id: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("cajas")
+    .select(
+      `
+        id,
+        perfil_id,
+        estado,
+        abierta_at,
+        cerrada_at,
+        efectivo_inicial,
+        efectivo_ventas,
+        efectivo_esperado,
+        efectivo_real,
+        diferencia_efectivo,
+        qr_total,
+        tarjeta_credito_total,
+        tarjeta_debito_total,
+        transferencia_total,
+        total_ventas,
+        cantidad_ventas,
+        observaciones,
+        profiles (
+          nombre,
+          email
+        )
+      `,
+    )
+    .eq("id", id)
+    .maybeSingle<CashRegisterRow>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data ? mapCashRegister(data) : null;
+}
+
+export async function listCashRegisterSales(cashRegisterId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("ventas")
+    .select(
+      `
+        id,
+        fecha,
+        estado,
+        forma_pago,
+        total,
+        motivo_anulacion,
+        profiles!ventas_vendedor_id_fkey (
+          nombre
+        )
+      `,
+    )
+    .eq("caja_id", cashRegisterId)
+    .order("fecha", { ascending: false })
+    .returns<CashRegisterSaleRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map(mapCashRegisterSale);
 }

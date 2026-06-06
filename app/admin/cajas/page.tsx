@@ -54,6 +54,7 @@ export default async function AdminCashRegistersPage() {
                 <th className="px-4 py-3">Efectivo real</th>
                 <th className="px-4 py-3">Diferencia</th>
                 <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -110,11 +111,19 @@ export default async function AdminCashRegistersPage() {
                   <td className="px-4 py-4 font-bold text-white">
                     {money(cashRegister.totalVentas)}
                   </td>
+                  <td className="px-4 py-4">
+                    <Link
+                      href={`/admin/cajas/${cashRegister.id}`}
+                      className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+                    >
+                      Ver detalle
+                    </Link>
+                  </td>
                 </tr>
               ))}
               {cashRegisters.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-10 text-center text-zinc-400">
+                  <td colSpan={10} className="px-4 py-10 text-center text-zinc-400">
                     No hay cajas para mostrar.
                   </td>
                 </tr>
@@ -126,4 +135,3 @@ export default async function AdminCashRegistersPage() {
     </AppShell>
   );
 }
-

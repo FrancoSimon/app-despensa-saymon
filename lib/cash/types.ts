@@ -51,3 +51,24 @@ export type CashRegisterActionState = {
   message: string | null;
 };
 
+export type CashRegisterSaleRow = {
+  id: string;
+  fecha: string;
+  estado?: "activa" | "anulada";
+  forma_pago: string;
+  total: number | string;
+  motivo_anulacion?: string | null;
+  profiles: {
+    nombre: string;
+  } | null;
+};
+
+export type CashRegisterSale = {
+  id: string;
+  fecha: string;
+  estado: "activa" | "anulada";
+  formaPago: string;
+  total: number;
+  motivoAnulacion: string | null;
+  vendedorNombre: string;
+};
