@@ -148,14 +148,17 @@ export default async function AdminReportsPage({
             {lowStockProducts.length}
           </p>
         </article>
-        <article className="rounded-lg border border-white/10 bg-black p-5">
+        <Link
+          href="/admin/ventas?estado=anulada"
+          className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
+        >
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
             Ventas anuladas
           </p>
           <p className="mt-3 text-2xl font-black text-red-100">
             {canceledSalesCount}
           </p>
-        </article>
+        </Link>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">

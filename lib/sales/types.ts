@@ -86,3 +86,29 @@ export type SaleTicket = {
   vendedorNombre: string;
   items: SaleTicketItem[];
 };
+
+export type AdminSaleStatusFilter = SaleStatus | "todas";
+
+export type AdminSaleRow = {
+  id: string;
+  fecha: string;
+  estado?: SaleStatus;
+  anulada_at?: string | null;
+  motivo_anulacion?: string | null;
+  forma_pago: PaymentMethod;
+  total: number | string;
+  profiles: {
+    nombre: string;
+  } | null;
+};
+
+export type AdminSale = {
+  id: string;
+  fecha: string;
+  estado: SaleStatus;
+  anuladaAt: string | null;
+  motivoAnulacion: string | null;
+  formaPago: PaymentMethod;
+  total: number;
+  vendedorNombre: string;
+};

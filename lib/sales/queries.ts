@@ -1,5 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
-import type { SaleTicket, SaleTicketRow } from "@/lib/sales/types";
+import type {
+  AdminSale,
+  AdminSaleRow,
+  AdminSaleStatusFilter,
+  SaleStatus,
+  SaleTicket,
+  SaleTicketRow,
+} from "@/lib/sales/types";
 
 function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
@@ -35,6 +42,101 @@ function mapSaleTicket(row: SaleTicketRow): SaleTicket {
       subtotal: toNumber(item.subtotal),
     })),
   };
+}
+
+function mapAdminSale(row: AdminSaleRow): AdminSale {
+  return {
+    id: row.id,
+    fecha: row.fecha,
+    estado: row.estado ?? "activa",
+    anuladaAt: row.anulada_at ?? null,
+    motivoAnulacion: row.motivo_anulacion ?? null,
+    formaPago: row.forma_pago,
+    total: toNumber(row.total),
+    vendedorNombre: row.profiles?.nombre ?? "Mostrador",
+  };
+}
+
+export function isAdminSaleStatusFilter(
+  value: unknown,
+): value is AdminSaleStatusFilter {
+  return value === "todas" || value === "activa" || value === "anulada";
+}
+
+function isMissingSaleStatus(errorCode?: string) {
+  return errorCode === "42703" || errorCode === "PGRST204";
+}
+
+export async function listAdminSales(
+  status: AdminSaleStatusFilter = "todas",
+  limit = 80,
+) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("ventas")
+    .select(
+      `
+        id,
+        fecha,
+        estado,
+        anulada_at,
+        motivo_anulacion,
+        forma_pago,
+        total,
+        profiles!ventas_vendedor_id_fkey (
+          nombre
+        )
+      `,
+    )
+    .order("fecha", { ascending: false })
+    .limit(limit);
+
+  if (status !== "todas") {
+    query = query.eq("estado", status);
+  }
+
+  const { data, error } = await query.returns<AdminSaleRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    if (isMissingSaleStatus(error.code)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("ventas")
+        .select(
+          `
+            id,
+            fecha,
+            forma_pago,
+            total,
+            profiles!ventas_vendedor_id_fkey (
+              nombre
+            )
+          `,
+        )
+        .order("fecha", { ascending: false })
+        .limit(limit)
+        .returns<AdminSaleRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      if (status === "anulada") {
+        return [];
+      }
+
+      return fallbackData.map((row) =>
+        mapAdminSale({ ...row, estado: "activa" as SaleStatus }),
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map(mapAdminSale);
 }
 
 export async function getSaleTicket(id: string) {
