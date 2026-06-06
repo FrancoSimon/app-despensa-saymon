@@ -78,6 +78,7 @@ export default async function AdminReportsPage({
   ]);
   const reportsReturnHref = `/admin/reportes?desde=${range.from}&hasta=${range.to}`;
   const encodedReportsReturnHref = encodeURIComponent(reportsReturnHref);
+  const cashRegistersHref = `/admin/cajas?desde=${range.from}&hasta=${range.to}&volver=${encodedReportsReturnHref}`;
 
   return (
     <AppShell profile={profile} title="Reportes">
@@ -182,7 +183,7 @@ export default async function AdminReportsPage({
           </p>
         </Link>
         <Link
-          href={`/admin/cajas?volver=${encodedReportsReturnHref}`}
+          href={cashRegistersHref}
           className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
         >
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
@@ -328,7 +329,7 @@ export default async function AdminReportsPage({
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-xl font-black text-white">Cajas del periodo</h2>
           <Link
-            href={`/admin/cajas?volver=${encodedReportsReturnHref}`}
+            href={cashRegistersHref}
             className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
           >
             Ver todas

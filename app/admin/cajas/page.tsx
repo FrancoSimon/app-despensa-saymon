@@ -1,13 +1,28 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
-import { listRecentCashRegisters } from "@/lib/cash/queries";
+import {
+  listCashRegisterOperators,
+  listCashRegisters,
+} from "@/lib/cash/queries";
+import { createReportDateRange } from "@/lib/reports/dates";
+import type { CashRegisterStatusFilter } from "@/lib/cash/types";
 
 type AdminCashRegistersPageProps = {
   searchParams: Promise<{
+    desde?: string;
+    estado?: string;
+    hasta?: string;
+    operador?: string;
     volver?: string;
   }>;
 };
+
+const statusOptions: { value: CashRegisterStatusFilter; label: string }[] = [
+  { value: "todas", label: "Todas" },
+  { value: "abierta", label: "Abiertas" },
+  { value: "cerrada", label: "Cerradas" },
+];
 
 function money(value: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -39,13 +54,50 @@ function getBackHref(value: string | undefined) {
   return "/admin";
 }
 
+function getStatusFilter(value: string | undefined): CashRegisterStatusFilter {
+  if (value === "abierta" || value === "cerrada") {
+    return value;
+  }
+
+  return "todas";
+}
+
 export default async function AdminCashRegistersPage({
   searchParams,
 }: AdminCashRegistersPageProps) {
   const profile = await requireAdminProfile();
-  const { volver } = await searchParams;
+  const { desde, estado, hasta, operador, volver } = await searchParams;
   const backHref = getBackHref(volver);
-  const cashRegisters = await listRecentCashRegisters();
+  const range = createReportDateRange(desde, hasta);
+  const status = getStatusFilter(estado);
+  const operatorId = operador || null;
+  const listQuery = new URLSearchParams({
+    desde: range.from,
+    hasta: range.to,
+  });
+
+  if (status !== "todas") {
+    listQuery.set("estado", status);
+  }
+
+  if (operatorId) {
+    listQuery.set("operador", operatorId);
+  }
+
+  if (backHref !== "/admin") {
+    listQuery.set("volver", backHref);
+  }
+
+  const detailReturnHref = `/admin/cajas?${listQuery.toString()}`;
+  const [cashRegisters, operators] = await Promise.all([
+    listCashRegisters({
+      fromIso: range.fromIso,
+      toIsoExclusive: range.toIsoExclusive,
+      status,
+      operatorId,
+    }),
+    listCashRegisterOperators(),
+  ]);
 
   return (
     <AppShell profile={profile} title="Cajas">
@@ -59,6 +111,62 @@ export default async function AdminCashRegistersPage({
             : "Volver al panel"}
         </Link>
       </div>
+
+      <form className="mb-5 grid gap-3 rounded-lg border border-white/10 bg-black p-4 md:grid-cols-[1fr_1fr_1fr_1.2fr_auto] md:items-end">
+        {backHref !== "/admin" ? (
+          <input type="hidden" name="volver" value={backHref} />
+        ) : null}
+        <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+          Desde
+          <input
+            name="desde"
+            type="date"
+            defaultValue={range.from}
+            className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+          />
+        </label>
+        <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+          Hasta
+          <input
+            name="hasta"
+            type="date"
+            defaultValue={range.to}
+            className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+          />
+        </label>
+        <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+          Estado
+          <select
+            name="estado"
+            defaultValue={status}
+            className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+          >
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+          Operador
+          <select
+            name="operador"
+            defaultValue={operatorId ?? ""}
+            className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+          >
+            <option value="">Todos</option>
+            {operators.map((operator) => (
+              <option key={operator.id} value={operator.id}>
+                {operator.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="h-11 rounded-md bg-lime-300 px-4 text-sm font-black text-black transition hover:bg-lime-200">
+          Aplicar
+        </button>
+      </form>
 
       <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
         <div className="overflow-x-auto">
@@ -133,11 +241,7 @@ export default async function AdminCashRegistersPage({
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={
-                        backHref.startsWith("/admin/reportes")
-                          ? `/admin/cajas/${cashRegister.id}?volver=${encodeURIComponent(backHref)}`
-                          : `/admin/cajas/${cashRegister.id}`
-                      }
+                      href={`/admin/cajas/${cashRegister.id}?volver=${encodeURIComponent(detailReturnHref)}`}
                       className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
                     >
                       Ver detalle

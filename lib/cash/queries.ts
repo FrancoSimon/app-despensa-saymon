@@ -2,8 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import type {
   CashRegister,
+  CashRegisterFilters,
   CashRegisterMovement,
   CashRegisterMovementRow,
+  CashRegisterOperatorOption,
   CashRegisterRow,
   CashRegisterSale,
   CashRegisterSaleRow,
@@ -17,6 +19,12 @@ type LiveTotalsRow = {
 type MovementTotalsRow = {
   tipo: string;
   monto: number | string;
+};
+
+type CashRegisterOperatorRow = {
+  id: string;
+  nombre: string;
+  email: string;
 };
 
 function toNumber(value: number | string | null) {
@@ -282,6 +290,86 @@ export async function listRecentCashRegisters(limit = 30) {
     .order("abierta_at", { ascending: false })
     .limit(limit)
     .returns<CashRegisterRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map(mapCashRegister);
+}
+
+export async function listCashRegisterOperators() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, nombre, email")
+    .in("rol", ["admin", "vendedor"])
+    .eq("activo", true)
+    .order("nombre", { ascending: true })
+    .returns<CashRegisterOperatorRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map<CashRegisterOperatorOption>((row) => ({
+    id: row.id,
+    nombre: row.nombre,
+    email: row.email,
+  }));
+}
+
+export async function listCashRegisters(filters: CashRegisterFilters, limit = 100) {
+  const supabase = await createClient();
+  let query = supabase
+    .from("cajas")
+    .select(
+      `
+        id,
+        perfil_id,
+        estado,
+        abierta_at,
+        cerrada_at,
+        efectivo_inicial,
+        efectivo_ventas,
+        efectivo_esperado,
+        efectivo_real,
+        diferencia_efectivo,
+        qr_total,
+        tarjeta_credito_total,
+        tarjeta_debito_total,
+        transferencia_total,
+        total_ventas,
+        cantidad_ventas,
+        observaciones,
+        profiles (
+          nombre,
+          email
+        )
+      `,
+    )
+    .gte("abierta_at", filters.fromIso)
+    .lt("abierta_at", filters.toIsoExclusive)
+    .order("abierta_at", { ascending: false })
+    .limit(limit);
+
+  if (filters.status !== "todas") {
+    query = query.eq("estado", filters.status);
+  }
+
+  if (filters.operatorId) {
+    query = query.eq("perfil_id", filters.operatorId);
+  }
+
+  const { data, error } = await query.returns<CashRegisterRow[]>();
 
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {

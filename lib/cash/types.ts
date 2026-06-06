@@ -1,4 +1,12 @@
 export type CashRegisterStatus = "abierta" | "cerrada";
+export type CashRegisterStatusFilter = CashRegisterStatus | "todas";
+
+export type CashRegisterFilters = {
+  fromIso: string;
+  toIsoExclusive: string;
+  status: CashRegisterStatusFilter;
+  operatorId: string | null;
+};
 
 export type CashRegisterRow = {
   id: string;
@@ -46,6 +54,12 @@ export type CashRegister = {
   observaciones: string | null;
   operadorNombre: string;
   operadorEmail: string;
+};
+
+export type CashRegisterOperatorOption = {
+  id: string;
+  nombre: string;
+  email: string;
 };
 
 export type CashRegisterActionState = {
