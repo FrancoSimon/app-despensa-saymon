@@ -121,7 +121,7 @@ export function PosTerminal({
     const term = customerSearch.trim().toLowerCase();
 
     if (!term) {
-      return customerOptions.slice(0, 6);
+      return customerOptions.slice(0, 2);
     }
 
     return customerOptions
