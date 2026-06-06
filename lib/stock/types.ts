@@ -43,6 +43,12 @@ export type SupplierRow = {
   id: string;
   nombre: string;
   telefono: string | null;
+  email?: string | null;
+  cuit?: string | null;
+  condicion_iva?: string | null;
+  direccion?: string | null;
+  localidad?: string | null;
+  contacto?: string | null;
   notas: string | null;
   activo: boolean;
   created_at: string;
@@ -53,6 +59,12 @@ export type Supplier = {
   id: string;
   nombre: string;
   telefono: string | null;
+  email: string | null;
+  cuit: string | null;
+  condicionIva: string | null;
+  direccion: string | null;
+  localidad: string | null;
+  contacto: string | null;
   notas: string | null;
   activo: boolean;
   createdAt: string;

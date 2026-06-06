@@ -44,6 +44,17 @@ function parsePurchaseForm(formData: FormData) {
   const productoId = formData.get("productoId");
   const proveedorId = readOptionalText(formData, "proveedorId");
   const proveedorNombre = readOptionalText(formData, "proveedorNombre");
+  const proveedorTelefono = readOptionalText(formData, "proveedorTelefono");
+  const proveedorEmail = readOptionalText(formData, "proveedorEmail");
+  const proveedorCuit = readOptionalText(formData, "proveedorCuit");
+  const proveedorCondicionIva = readOptionalText(
+    formData,
+    "proveedorCondicionIva",
+  );
+  const proveedorDireccion = readOptionalText(formData, "proveedorDireccion");
+  const proveedorLocalidad = readOptionalText(formData, "proveedorLocalidad");
+  const proveedorContacto = readOptionalText(formData, "proveedorContacto");
+  const proveedorNotas = readOptionalText(formData, "proveedorNotas");
   const cantidad = Number(formData.get("cantidad"));
   const costoUnitario = Number(formData.get("costoUnitario"));
   const fechaCompra = readOptionalText(formData, "fechaCompra");
@@ -74,6 +85,14 @@ function parsePurchaseForm(formData: FormData) {
     productoId,
     proveedorId,
     proveedorNombre,
+    proveedorTelefono,
+    proveedorEmail,
+    proveedorCuit,
+    proveedorCondicionIva,
+    proveedorDireccion,
+    proveedorLocalidad,
+    proveedorContacto,
+    proveedorNotas,
     cantidad,
     costoUnitario,
     fechaCompra,
@@ -115,6 +134,14 @@ export async function registerStockPurchaseAction(formData: FormData) {
     p_fecha_compra: input.fechaCompra,
     p_comprobante: input.comprobante,
     p_notas: input.notas,
+    p_proveedor_telefono: input.proveedorTelefono,
+    p_proveedor_email: input.proveedorEmail,
+    p_proveedor_cuit: input.proveedorCuit,
+    p_proveedor_condicion_iva: input.proveedorCondicionIva,
+    p_proveedor_direccion: input.proveedorDireccion,
+    p_proveedor_localidad: input.proveedorLocalidad,
+    p_proveedor_contacto: input.proveedorContacto,
+    p_proveedor_notas: input.proveedorNotas,
   });
 
   if (error) {

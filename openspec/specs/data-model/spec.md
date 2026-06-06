@@ -42,3 +42,10 @@ The system SHALL calculate customer current-account balances from debit and paym
 - **WHEN** customer account movements are listed chronologically
 - **THEN** each movement can be presented with a running balance after that movement
 - **AND** debit movements increase balance while payment movements reduce balance
+
+### Requirement: Supplier Entity
+The system SHALL store supplier data for stock purchases.
+
+#### Scenario: Supplier is persisted
+- **WHEN** a supplier is created during stock purchase registration
+- **THEN** the system stores name, optional phone, email, CUIT/document, VAT condition, address, locality, contact person, notes, active flag, and timestamps

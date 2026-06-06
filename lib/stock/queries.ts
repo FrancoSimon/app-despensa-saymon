@@ -34,6 +34,12 @@ function mapSupplier(row: SupplierRow): Supplier {
     id: row.id,
     nombre: row.nombre,
     telefono: row.telefono,
+    email: row.email ?? null,
+    cuit: row.cuit ?? null,
+    condicionIva: row.condicion_iva ?? null,
+    direccion: row.direccion ?? null,
+    localidad: row.localidad ?? null,
+    contacto: row.contacto ?? null,
     notas: row.notas,
     activo: row.activo,
     createdAt: row.created_at,
@@ -62,12 +68,29 @@ export async function listActiveSuppliers() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("proveedores")
-    .select("id, nombre, telefono, notas, activo, created_at, updated_at")
+    .select(
+      "id, nombre, telefono, email, cuit, condicion_iva, direccion, localidad, contacto, notas, activo, created_at, updated_at",
+    )
     .eq("activo", true)
     .order("nombre", { ascending: true })
     .returns<SupplierRow[]>();
 
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("proveedores")
+        .select("id, nombre, telefono, notas, activo, created_at, updated_at")
+        .eq("activo", true)
+        .order("nombre", { ascending: true })
+        .returns<SupplierRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      return fallbackData.map(mapSupplier);
+    }
+
     if (error.code === "42P01" || error.code === "PGRST205") {
       return [];
     }

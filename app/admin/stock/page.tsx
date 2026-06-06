@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { StockProductSelector } from "@/components/stock/stock-product-selector";
+import { StockSupplierSelector } from "@/components/stock/stock-supplier-selector";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { listAdminProducts } from "@/lib/products/queries";
 import {
@@ -147,30 +148,7 @@ export default async function AdminStockPage() {
               label="Producto"
             />
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-zinc-200">
-                Proveedor existente
-                <select
-                  name="proveedorId"
-                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
-                >
-                  <option value="">Crear nuevo o seleccionar</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-sm font-semibold text-zinc-200">
-                Nuevo proveedor
-                <input
-                  name="proveedorNombre"
-                  placeholder="Nombre si no esta en la lista"
-                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
-                />
-              </label>
-            </div>
+            <StockSupplierSelector suppliers={suppliers} />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold text-zinc-200">
