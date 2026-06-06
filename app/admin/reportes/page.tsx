@@ -4,6 +4,7 @@ import { CsvExportButton } from "@/components/reports/csv-export-button";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { createReportDateRange } from "@/lib/reports/dates";
 import {
+  getCanceledSalesCount,
   getSalesSummary,
   listBestSellingProducts,
   listDailySales,
@@ -46,12 +47,14 @@ export default async function AdminReportsPage({
     bestSellers,
     lowStockProducts,
     wholesaleStatusCounts,
+    canceledSalesCount,
   ] = await Promise.all([
     getSalesSummary(range),
     listDailySales(range),
     listBestSellingProducts(range),
     listLowStockProductsForReport(),
-    listWholesaleOrderStatusCounts(),
+    listWholesaleOrderStatusCounts(range),
+    getCanceledSalesCount(range),
   ]);
 
   return (
@@ -143,6 +146,14 @@ export default async function AdminReportsPage({
           </p>
           <p className="mt-3 text-2xl font-black text-yellow-200">
             {lowStockProducts.length}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Ventas anuladas
+          </p>
+          <p className="mt-3 text-2xl font-black text-red-100">
+            {canceledSalesCount}
           </p>
         </article>
       </div>
@@ -261,7 +272,7 @@ export default async function AdminReportsPage({
                 className="rounded-md border border-white/10 bg-zinc-950 p-4 transition hover:border-lime-300"
               >
                 <p className="text-sm font-bold capitalize text-zinc-300">
-                  {row.estado}
+                  Pedido {row.estado}
                 </p>
                 <p className="mt-2 text-2xl font-black text-lime-300">
                   {row.count}

@@ -278,6 +278,30 @@ export async function listBestSellingProducts(range: ReportDateRange) {
   });
 }
 
+export async function getCanceledSalesCount(range: ReportDateRange) {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("ventas")
+    .select("id", { count: "exact", head: true })
+    .eq("estado", "anulada")
+    .gte("fecha", range.fromIso)
+    .lt("fecha", range.toIsoExclusive);
+
+  if (error) {
+    if (
+      error.code === "42P01" ||
+      error.code === "PGRST205" ||
+      isMissingSaleStatus(error.code)
+    ) {
+      return 0;
+    }
+
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
+
 export async function listLowStockProductsForReport(limit = 10) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -313,11 +337,13 @@ export async function listLowStockProductsForReport(limit = 10) {
     }));
 }
 
-export async function listWholesaleOrderStatusCounts() {
+export async function listWholesaleOrderStatusCounts(range: ReportDateRange) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("pedidos_mayoristas")
     .select("estado")
+    .gte("fecha_pedido", range.fromIso)
+    .lt("fecha_pedido", range.toIsoExclusive)
     .returns<Pick<WholesaleStatusCount, "estado">[]>();
 
   const statuses: WholesaleStatusCount[] = [
