@@ -65,6 +65,7 @@ export type AccountPaymentTicket = {
   operadorNombre: string;
   monto: number;
   saldoActual: number;
+  saldoAntes: number;
   formaPago: PaymentMethod;
   nota: string | null;
   createdAt: string;

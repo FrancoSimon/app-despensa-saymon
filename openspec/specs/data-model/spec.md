@@ -36,13 +36,9 @@ The system SHALL store wholesale orders.
 - **AND** status is one of `pendiente`, `confirmado`, `entregado`, or `rechazado`
 
 ### Requirement: Customer Account Movement Entity
-The system SHALL store customer current-account debit and payment movements.
+The system SHALL calculate customer current-account balances from debit and payment movements.
 
-#### Scenario: Account movement is persisted
-- **WHEN** a current-account sale or payment is registered
-- **THEN** the system stores id, customer id, admin/seller profile id, optional sale id, type, amount, payment method when applicable, note, and timestamp
-- **AND** movement type is one of `venta` or `pago`
-
-#### Scenario: Current-account sale is canceled
-- **WHEN** a current-account sale is canceled
-- **THEN** the account movement linked to that sale no longer contributes to the customer balance
+#### Scenario: Partial payment affects balance
+- **WHEN** a payment movement is lower than the current account balance
+- **THEN** the balance is reduced only by the payment amount
+- **AND** remaining debt stays pending

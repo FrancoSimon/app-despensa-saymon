@@ -8,6 +8,12 @@ import {
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { paymentMethodLabels, paymentMethodOptions } from "@/lib/sales/payment-methods";
 
+type AdminCurrentAccountsPageProps = {
+  searchParams: Promise<{
+    q?: string;
+  }>;
+};
+
 function money(value: number) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -30,13 +36,40 @@ const accountPaymentOptions = paymentMethodOptions.filter(
   (option) => option.value !== "cuenta_corriente",
 );
 
-export default async function AdminCurrentAccountsPage() {
+function matchesSearch(
+  account: Awaited<ReturnType<typeof listCustomerAccountSummaries>>[number],
+  search: string,
+) {
+  const term = search.trim().toLowerCase();
+
+  if (!term) {
+    return true;
+  }
+
+  return [
+    account.clienteNombre,
+    account.clienteTelefono,
+    account.clienteRazonSocial,
+    account.clienteDocumento,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.length > 0)
+    .some((value) => value.toLowerCase().includes(term));
+}
+
+export default async function AdminCurrentAccountsPage({
+  searchParams,
+}: AdminCurrentAccountsPageProps) {
   const profile = await requireAdminProfile();
+  const { q } = await searchParams;
+  const search = typeof q === "string" ? q.trim() : "";
   const [accounts, movements] = await Promise.all([
     listCustomerAccountSummaries(),
     listRecentAccountMovements(),
   ]);
   const totalDebt = accounts.reduce((sum, account) => sum + account.saldo, 0);
+  const filteredAccounts = accounts.filter((account) =>
+    matchesSearch(account, search),
+  );
 
   return (
     <AppShell profile={profile} title="Cuentas corrientes">
@@ -62,11 +95,41 @@ export default async function AdminCurrentAccountsPage() {
         />
       </section>
 
+      <form action="/admin/cuentas-corrientes" className="mb-6">
+        <label className="block text-sm font-semibold text-zinc-200">
+          Buscar cliente
+          <div className="mt-2 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
+            <input
+              name="q"
+              defaultValue={search}
+              placeholder="Nombre, telefono, razon social o documento"
+              className="h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
+            />
+            <button className="rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200">
+              Buscar
+            </button>
+            {search ? (
+              <Link
+                href="/admin/cuentas-corrientes"
+                className="rounded-md border border-white/10 px-5 py-3 text-center text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+              >
+                Limpiar
+              </Link>
+            ) : null}
+          </div>
+        </label>
+      </form>
+
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
-          <h2 className="text-xl font-black text-white">Saldos por cliente</h2>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-xl font-black text-white">Saldos por cliente</h2>
+            <p className="text-sm text-zinc-500">
+              {filteredAccounts.length} de {accounts.length} cuentas
+            </p>
+          </div>
           <div className="mt-5 grid gap-4">
-            {accounts.map((account) => {
+            {filteredAccounts.map((account) => {
               const hasDebt = account.saldo > 0;
 
               return (
@@ -74,8 +137,8 @@ export default async function AdminCurrentAccountsPage() {
                   key={account.clienteId}
                   className="rounded-md border border-white/10 bg-zinc-950 p-4"
                 >
-                  <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-                    <div>
+                  <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_170px]">
+                    <div className="min-w-0">
                       <h3 className="text-lg font-black text-white">
                         {account.clienteNombre}
                       </h3>
@@ -92,7 +155,7 @@ export default async function AdminCurrentAccountsPage() {
                         Ultima actividad: {formatDate(account.ultimaActividad)}
                       </p>
                     </div>
-                    <div className="text-left lg:text-right">
+                    <div className="rounded-md border border-white/10 bg-black p-3 text-left lg:text-right">
                       <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
                         Saldo
                       </p>
@@ -105,12 +168,15 @@ export default async function AdminCurrentAccountsPage() {
                       >
                         {money(account.saldo)}
                       </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {hasDebt ? "Pendiente" : "Sin deuda"}
+                      </p>
                     </div>
                   </div>
 
                   <form
                     action={registerAccountPaymentAction}
-                    className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_1.2fr_auto]"
+                    className="mt-4 grid items-end gap-3 lg:grid-cols-[minmax(130px,0.8fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_auto]"
                   >
                     <input
                       type="hidden"
@@ -125,11 +191,16 @@ export default async function AdminCurrentAccountsPage() {
                         min="0.01"
                         max={hasDebt ? account.saldo.toFixed(2) : undefined}
                         step="0.01"
-                        defaultValue={hasDebt ? account.saldo.toFixed(2) : ""}
+                        placeholder={hasDebt ? `Hasta ${money(account.saldo)}` : ""}
                         disabled={!hasDebt}
                         className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition focus:border-lime-300 disabled:opacity-50"
                         required
                       />
+                      {hasDebt ? (
+                        <span className="mt-1 block text-xs text-zinc-500">
+                          Para cancelar total: {money(account.saldo)}
+                        </span>
+                      ) : null}
                     </label>
                     <label className="text-sm font-semibold text-zinc-200">
                       Forma de pago
@@ -157,7 +228,7 @@ export default async function AdminCurrentAccountsPage() {
                     </label>
                     <button
                       disabled={!hasDebt}
-                      className="self-end rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="h-11 rounded-md bg-lime-300 px-5 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Registrar pago
                     </button>
@@ -169,6 +240,11 @@ export default async function AdminCurrentAccountsPage() {
             {accounts.length === 0 ? (
               <p className="rounded-md border border-white/10 bg-zinc-950 p-8 text-center text-zinc-400">
                 Todavia no hay movimientos de cuenta corriente.
+              </p>
+            ) : null}
+            {accounts.length > 0 && filteredAccounts.length === 0 ? (
+              <p className="rounded-md border border-white/10 bg-zinc-950 p-8 text-center text-zinc-400">
+                No hay cuentas corrientes para esa busqueda.
               </p>
             ) : null}
           </div>

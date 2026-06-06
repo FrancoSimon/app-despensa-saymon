@@ -150,6 +150,8 @@ export async function getAccountPaymentTicket(paymentId: string) {
     (sum, movement) => sum + movementSign(movement.tipo) * toNumber(movement.monto),
     0,
   );
+  const roundedSaldoActual = Math.round(saldoActual * 100) / 100;
+  const monto = toNumber(data.monto);
 
   return {
     id: data.id,
@@ -159,8 +161,9 @@ export async function getAccountPaymentTicket(paymentId: string) {
     clienteRazonSocial: data.clientes?.razon_social ?? null,
     clienteDocumento: data.clientes?.documento_numero ?? null,
     operadorNombre: data.profiles?.nombre ?? "Administrador",
-    monto: toNumber(data.monto),
-    saldoActual: Math.round(saldoActual * 100) / 100,
+    monto,
+    saldoActual: roundedSaldoActual,
+    saldoAntes: Math.round((roundedSaldoActual + monto) * 100) / 100,
     formaPago: data.forma_pago,
     nota: data.nota,
     createdAt: data.created_at,

@@ -57,6 +57,7 @@ export default async function AccountPaymentTicketPage({
 
   const businessLines = getBusinessReceiptLines();
   const receiptNumber = `CC-${shortId(ticket.id)}`;
+  const isPartialPayment = ticket.saldoActual > 0;
 
   return (
     <main className="min-h-dvh bg-zinc-950 px-4 py-6 text-zinc-950 print:min-h-0 print:bg-white print:p-0">
@@ -91,7 +92,9 @@ export default async function AccountPaymentTicketPage({
             {businessInfo.name}
           </h1>
           <p className="mt-1 text-xs uppercase tracking-wide">
-            Recibo de cuenta corriente
+            {isPartialPayment
+              ? "Recibo de pago parcial"
+              : "Recibo de cancelacion total"}
           </p>
           <p className="mt-1 text-[10px] font-bold uppercase">
             {businessInfo.nonFiscalNotice}
@@ -104,6 +107,9 @@ export default async function AccountPaymentTicketPage({
         </header>
 
         <section className="border-b border-dashed border-zinc-400 py-3">
+          <div className="mb-3 border border-zinc-900 px-2 py-1 text-center text-xs font-black uppercase">
+            {isPartialPayment ? "Pago parcial" : "Cuenta cancelada"}
+          </div>
           <div className="grid grid-cols-[auto_1fr] gap-2 text-sm font-black">
             <span>Comprobante</span>
             <strong className="text-right">{receiptNumber}</strong>
@@ -145,6 +151,10 @@ export default async function AccountPaymentTicketPage({
         </section>
 
         <section className="border-b border-dashed border-zinc-400 py-3">
+          <div className="mb-2 flex justify-between gap-4">
+            <span>Saldo anterior</span>
+            <strong>{money(ticket.saldoAntes)}</strong>
+          </div>
           <div className="flex justify-between gap-4 text-lg font-black">
             <span>Importe recibido</span>
             <strong>{money(ticket.monto)}</strong>
@@ -162,7 +172,7 @@ export default async function AccountPaymentTicketPage({
         </section>
 
         <footer className="pt-3 text-center text-[10px] uppercase leading-4">
-          <p>Pago registrado</p>
+          <p>{isPartialPayment ? "Pago parcial registrado" : "Deuda cancelada"}</p>
           <p>{businessInfo.name}</p>
           <p>{businessInfo.footerNotice}</p>
         </footer>
