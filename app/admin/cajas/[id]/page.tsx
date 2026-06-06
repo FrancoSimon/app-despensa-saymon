@@ -12,6 +12,9 @@ import type { PaymentMethod } from "@/lib/sales/types";
 
 type AdminCashRegisterDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    volver?: string;
+  }>;
 };
 
 function money(value: number) {
@@ -40,11 +43,22 @@ function paymentLabel(value: string) {
   return paymentMethodLabels[value as PaymentMethod] ?? value;
 }
 
+function getBackHref(value: string | undefined) {
+  if (value?.startsWith("/admin/reportes") || value?.startsWith("/admin/cajas")) {
+    return value;
+  }
+
+  return "/admin/cajas";
+}
+
 export default async function AdminCashRegisterDetailPage({
   params,
+  searchParams,
 }: AdminCashRegisterDetailPageProps) {
   const profile = await requireAdminProfile();
   const { id } = await params;
+  const { volver } = await searchParams;
+  const backHref = getBackHref(volver);
   const [cashRegister, sales, movements] = await Promise.all([
     getCashRegisterById(id),
     listCashRegisterSales(id),
@@ -68,10 +82,12 @@ export default async function AdminCashRegisterDetailPage({
     <AppShell profile={profile} title={`Caja #${cashRegister.id.slice(0, 8)}`}>
       <div className="mb-5">
         <Link
-          href="/admin/cajas"
+          href={backHref}
           className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
         >
-          Volver a cajas
+          {backHref.startsWith("/admin/reportes")
+            ? "Volver a reportes"
+            : "Volver a cajas"}
         </Link>
       </div>
 
@@ -231,7 +247,7 @@ export default async function AdminCashRegisterDetailPage({
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={`/vendedor/ventas/${sale.id}/ticket?volver=${encodeURIComponent(`/admin/cajas/${cashRegister.id}`)}`}
+                      href={`/vendedor/ventas/${sale.id}/ticket?volver=${encodeURIComponent(`/admin/cajas/${cashRegister.id}?volver=${encodeURIComponent(backHref)}`)}`}
                       className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
                     >
                       Ver ticket

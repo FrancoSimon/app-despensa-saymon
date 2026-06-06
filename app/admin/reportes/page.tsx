@@ -76,6 +76,7 @@ export default async function AdminReportsPage({
     getCashRegisterReportSummary(range),
     listCashRegisterReportRows(range),
   ]);
+  const reportsReturnHref = `/admin/reportes?desde=${range.from}&hasta=${range.to}`;
 
   return (
     <AppShell profile={profile} title="Reportes">
@@ -395,7 +396,7 @@ export default async function AdminReportsPage({
                   </td>
                   <td className="px-3 py-3">
                     <Link
-                      href={`/admin/cajas/${cashRegister.id}`}
+                      href={`/admin/cajas/${cashRegister.id}?volver=${encodeURIComponent(reportsReturnHref)}`}
                       className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
                     >
                       Detalle
