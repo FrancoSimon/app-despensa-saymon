@@ -54,7 +54,7 @@ export async function getSaleTicket(id: string) {
         descuento_porcentaje,
         recargo_porcentaje,
         total,
-        profiles (
+        profiles!ventas_vendedor_id_fkey (
           nombre
         ),
         venta_items (
@@ -83,7 +83,7 @@ export async function getSaleTicket(id: string) {
             descuento_porcentaje,
             recargo_porcentaje,
             total,
-            profiles (
+            profiles!ventas_vendedor_id_fkey (
               nombre
             ),
             venta_items (
