@@ -50,6 +50,7 @@ export default async function AdminPage() {
         <ModuleCard
           title="Stock bajo"
           description="Alertas para productos por debajo del minimo configurado."
+          href="/admin/stock"
           meta={lowStockCount === null ? "N/D" : String(lowStockCount)}
         />
         <ModuleCard

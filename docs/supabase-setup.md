@@ -131,3 +131,13 @@ supabase/migrations/20260605030000_add_counter_sale_payment_methods.sql
 ```
 
 This extends `forma_pago_venta` with `tarjeta_credito`, `tarjeta_debito`, and `transferencia` for the POS checkout.
+
+## 12. Apply the stock movements migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605040000_create_stock_movements.sql
+```
+
+This creates manual stock movement history and the admin-only `registrar_movimiento_stock` RPC used to record replenishments or stock exits atomically.
