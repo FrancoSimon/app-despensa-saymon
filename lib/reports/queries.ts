@@ -32,11 +32,16 @@ function emptySummary(): SalesSummary {
   };
 }
 
+function isMissingSaleStatus(errorCode?: string) {
+  return errorCode === "42703" || errorCode === "PGRST204";
+}
+
 export async function getSalesSummary(range: ReportDateRange) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("ventas")
     .select("fecha, forma_pago, total")
+    .eq("estado", "activa")
     .gte("fecha", range.fromIso)
     .lt("fecha", range.toIsoExclusive)
     .returns<SaleRow[]>();
@@ -44,6 +49,40 @@ export async function getSalesSummary(range: ReportDateRange) {
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
       return emptySummary();
+    }
+
+    if (isMissingSaleStatus(error.code)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("ventas")
+        .select("fecha, forma_pago, total")
+        .gte("fecha", range.fromIso)
+        .lt("fecha", range.toIsoExclusive)
+        .returns<SaleRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      return fallbackData.reduce<SalesSummary>((summary, sale) => {
+        const total = toNumber(sale.total);
+
+        return {
+          total: summary.total + total,
+          count: summary.count + 1,
+          cashTotal:
+            summary.cashTotal + (sale.forma_pago === "efectivo" ? total : 0),
+          qrTotal: summary.qrTotal + (sale.forma_pago === "qr" ? total : 0),
+          cardTotal:
+            summary.cardTotal +
+            (sale.forma_pago === "tarjeta_credito" ||
+            sale.forma_pago === "tarjeta_debito"
+              ? total
+              : 0),
+          transferTotal:
+            summary.transferTotal +
+            (sale.forma_pago === "transferencia" ? total : 0),
+        };
+      }, emptySummary());
     }
 
     throw new Error(error.message);
@@ -75,6 +114,7 @@ export async function listDailySales(range: ReportDateRange) {
   const { data, error } = await supabase
     .from("ventas")
     .select("fecha, forma_pago, total")
+    .eq("estado", "activa")
     .gte("fecha", range.fromIso)
     .lt("fecha", range.toIsoExclusive)
     .order("fecha", { ascending: true })
@@ -83,6 +123,37 @@ export async function listDailySales(range: ReportDateRange) {
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
       return [];
+    }
+
+    if (isMissingSaleStatus(error.code)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("ventas")
+        .select("fecha, forma_pago, total")
+        .gte("fecha", range.fromIso)
+        .lt("fecha", range.toIsoExclusive)
+        .order("fecha", { ascending: true })
+        .returns<SaleRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      const rows = new Map<string, DailySalesRow>();
+
+      for (const sale of fallbackData) {
+        const date = localDateKey(sale.fecha);
+        const current = rows.get(date) ?? { date, count: 0, total: 0 };
+
+        rows.set(date, {
+          date,
+          count: current.count + 1,
+          total: current.total + toNumber(sale.total),
+        });
+      }
+
+      return Array.from(rows.values()).sort((a, b) =>
+        a.date.localeCompare(b.date),
+      );
     }
 
     throw new Error(error.message);
@@ -115,10 +186,12 @@ export async function listBestSellingProducts(range: ReportDateRange) {
         cantidad,
         subtotal,
         ventas!inner (
-          fecha
+          fecha,
+          estado
         )
       `,
     )
+    .eq("ventas.estado", "activa")
     .gte("ventas.fecha", range.fromIso)
     .lt("ventas.fecha", range.toIsoExclusive)
     .returns<SaleItemReportRow[]>();
@@ -126,6 +199,54 @@ export async function listBestSellingProducts(range: ReportDateRange) {
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
       return [];
+    }
+
+    if (isMissingSaleStatus(error.code)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("venta_items")
+        .select(
+          `
+            producto_id,
+            producto_nombre,
+            cantidad,
+            subtotal,
+            ventas!inner (
+              fecha
+            )
+          `,
+        )
+        .gte("ventas.fecha", range.fromIso)
+        .lt("ventas.fecha", range.toIsoExclusive)
+        .returns<SaleItemReportRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      const rows = new Map<string, BestSellerRow>();
+
+      for (const item of fallbackData) {
+        const current = rows.get(item.producto_id) ?? {
+          productId: item.producto_id,
+          productName: item.producto_nombre,
+          quantity: 0,
+          total: 0,
+        };
+
+        rows.set(item.producto_id, {
+          ...current,
+          quantity: current.quantity + item.cantidad,
+          total: current.total + toNumber(item.subtotal),
+        });
+      }
+
+      return Array.from(rows.values()).sort((a, b) => {
+        if (b.quantity !== a.quantity) {
+          return b.quantity - a.quantity;
+        }
+
+        return b.total - a.total;
+      });
     }
 
     throw new Error(error.message);

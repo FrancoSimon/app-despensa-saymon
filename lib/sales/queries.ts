@@ -16,6 +16,9 @@ function mapSaleTicket(row: SaleTicketRow): SaleTicket {
   return {
     id: row.id,
     fecha: row.fecha,
+    estado: row.estado ?? "activa",
+    anuladaAt: row.anulada_at ?? null,
+    motivoAnulacion: row.motivo_anulacion ?? null,
     formaPago: row.forma_pago,
     subtotal,
     descuentoPorcentaje,
@@ -36,12 +39,16 @@ function mapSaleTicket(row: SaleTicketRow): SaleTicket {
 
 export async function getSaleTicket(id: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+
+  const query = supabase
     .from("ventas")
     .select(
       `
         id,
         fecha,
+        estado,
+        anulada_at,
+        motivo_anulacion,
         forma_pago,
         subtotal,
         descuento_porcentaje,
@@ -61,8 +68,43 @@ export async function getSaleTicket(id: string) {
     )
     .eq("id", id)
     .maybeSingle<SaleTicketRow>();
+  const { data, error } = await query;
 
   if (error) {
+    if (error.code === "42703" || error.code === "PGRST204") {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("ventas")
+        .select(
+          `
+            id,
+            fecha,
+            forma_pago,
+            subtotal,
+            descuento_porcentaje,
+            recargo_porcentaje,
+            total,
+            profiles (
+              nombre
+            ),
+            venta_items (
+              id,
+              producto_nombre,
+              cantidad,
+              precio_unitario,
+              subtotal
+            )
+          `,
+        )
+        .eq("id", id)
+        .maybeSingle<SaleTicketRow>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      return fallbackData ? mapSaleTicket(fallbackData) : null;
+    }
+
     throw new Error(error.message);
   }
 

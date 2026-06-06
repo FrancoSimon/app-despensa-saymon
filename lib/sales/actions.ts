@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { isPaymentMethod } from "@/lib/sales/payment-methods";
 import { createClient } from "@/lib/supabase/server";
@@ -83,4 +84,41 @@ export async function confirmCounterSaleAction(
     total: toNumber(data.total),
     fecha: data.fecha,
   };
+}
+
+export async function cancelCounterSaleAction(formData: FormData) {
+  const { profile } = await getCurrentProfile();
+
+  if (!profile || (profile.rol !== "admin" && profile.rol !== "vendedor")) {
+    throw new Error("No autorizado.");
+  }
+
+  const ventaId = formData.get("ventaId");
+  const motivo = formData.get("motivo");
+
+  if (typeof ventaId !== "string" || !ventaId) {
+    throw new Error("Venta invalida.");
+  }
+
+  if (typeof motivo !== "string" || !motivo.trim()) {
+    throw new Error("Ingresa el motivo de anulacion.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancelar_venta_mostrador", {
+    p_venta_id: ventaId,
+    p_motivo: motivo.trim(),
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/vendedor");
+  revalidatePath("/admin");
+  revalidatePath("/admin/reportes");
+  revalidatePath("/admin/productos");
+  revalidatePath("/admin/stock");
+  revalidatePath(`/vendedor/ventas/${ventaId}/ticket`);
+  redirect(`/vendedor/ventas/${ventaId}/ticket`);
 }

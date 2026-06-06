@@ -35,6 +35,8 @@ export type ConfirmSaleRpcRow = {
   fecha: string;
 };
 
+export type SaleStatus = "activa" | "anulada";
+
 export type SaleTicketItemRow = {
   id: string;
   producto_nombre: string;
@@ -46,6 +48,9 @@ export type SaleTicketItemRow = {
 export type SaleTicketRow = {
   id: string;
   fecha: string;
+  estado?: SaleStatus;
+  anulada_at?: string | null;
+  motivo_anulacion?: string | null;
   forma_pago: PaymentMethod;
   subtotal: number | string;
   descuento_porcentaje: number | string;
@@ -68,6 +73,9 @@ export type SaleTicketItem = {
 export type SaleTicket = {
   id: string;
   fecha: string;
+  estado: SaleStatus;
+  anuladaAt: string | null;
+  motivoAnulacion: string | null;
   formaPago: PaymentMethod;
   subtotal: number;
   descuentoPorcentaje: number;

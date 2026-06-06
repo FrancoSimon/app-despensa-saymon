@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
 import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { cancelCounterSaleAction } from "@/lib/sales/actions";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import type { SaleTicket } from "@/lib/sales/types";
 import { getSaleTicket } from "@/lib/sales/queries";
@@ -36,11 +37,19 @@ function formatDateTime(value: string) {
 
 function buildWhatsAppMessage(ticket: SaleTicket) {
   const lines = [
-    "SAYMON - Ticket interno",
+    ticket.estado === "anulada"
+      ? "SAYMON - Ticket interno ANULADO"
+      : "SAYMON - Ticket interno",
     "No valido como factura",
     "",
     `Venta: #${ticket.id.slice(0, 8)}`,
     `Fecha: ${formatDateTime(ticket.fecha)}`,
+    ...(ticket.estado === "anulada"
+      ? [
+          `Anulada: ${ticket.anuladaAt ? formatDateTime(ticket.anuladaAt) : "-"}`,
+          `Motivo: ${ticket.motivoAnulacion ?? "-"}`,
+        ]
+      : []),
     `Pago: ${paymentMethodLabels[ticket.formaPago]}`,
     "",
     "Productos:",
@@ -91,8 +100,10 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
         >
           Volver
         </Link>
-        <WhatsAppTicketButton message={whatsAppMessage} />
-        <PrintTicketButton />
+        <div className="flex flex-wrap gap-2">
+          <WhatsAppTicketButton message={whatsAppMessage} />
+          <PrintTicketButton />
+        </div>
       </div>
 
       <article className="mx-auto max-w-sm bg-white p-6 font-mono text-sm shadow-2xl print:max-w-none print:shadow-none">
@@ -112,6 +123,11 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
           <p className="mt-2 text-[11px] font-bold uppercase">
             No valido como factura
           </p>
+          {ticket.estado === "anulada" ? (
+            <p className="mt-3 border border-zinc-900 px-2 py-1 text-xs font-black uppercase">
+              Venta anulada
+            </p>
+          ) : null}
         </header>
 
         <section className="border-b border-dashed border-zinc-400 py-4">
@@ -131,6 +147,20 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
             <span>Pago</span>
             <strong>{paymentMethodLabels[ticket.formaPago]}</strong>
           </div>
+          {ticket.estado === "anulada" ? (
+            <>
+              <div className="mt-1 flex justify-between gap-4">
+                <span>Anulada</span>
+                <strong className="text-right">
+                  {ticket.anuladaAt ? formatDateTime(ticket.anuladaAt) : "-"}
+                </strong>
+              </div>
+              <div className="mt-1">
+                <span>Motivo</span>
+                <p className="mt-1 font-bold">{ticket.motivoAnulacion ?? "-"}</p>
+              </div>
+            </>
+          ) : null}
         </section>
 
         <section className="border-b border-dashed border-zinc-400 py-4">
@@ -173,6 +203,27 @@ export default async function SaleTicketPage({ params }: SaleTicketPageProps) {
           <p>Registro interno sin validez fiscal</p>
         </footer>
       </article>
+
+      {ticket.estado === "activa" ? (
+        <form
+          action={cancelCounterSaleAction}
+          className="mx-auto mt-5 grid max-w-sm gap-3 rounded-lg border border-red-400/30 bg-black p-4 text-white print:hidden"
+        >
+          <input type="hidden" name="ventaId" value={ticket.id} />
+          <label className="text-sm font-bold text-red-100">
+            Motivo de anulacion
+            <textarea
+              name="motivo"
+              rows={2}
+              className="mt-2 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none transition focus:border-red-300"
+              required
+            />
+          </label>
+          <button className="rounded-md border border-red-400/40 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-950">
+            Anular venta y reponer stock
+          </button>
+        </form>
+      ) : null}
     </main>
   );
 }

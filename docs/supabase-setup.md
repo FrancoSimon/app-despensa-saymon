@@ -151,3 +151,13 @@ supabase/migrations/20260605050000_add_automatic_stock_history.sql
 ```
 
 This extends stock movement history with origin metadata and updates the POS and wholesale confirmation RPCs so automatic stock exits are visible in `/admin/stock`.
+
+## 14. Apply the counter sale cancellation migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605060000_add_counter_sale_cancellation.sql
+```
+
+This adds sale cancellation metadata and the `cancelar_venta_mostrador` RPC used to cancel active counter sales, restore stock, and record stock entry movements.
