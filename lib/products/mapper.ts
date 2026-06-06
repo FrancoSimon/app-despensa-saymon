@@ -1,7 +1,7 @@
 import type { Product, ProductRow } from "@/lib/products/types";
 
-function toNumber(value: number | string | null) {
-  if (value === null) {
+function toNumber(value: number | string | null | undefined) {
+  if (value === null || value === undefined) {
     return null;
   }
 
@@ -20,6 +20,7 @@ export function mapProduct(row: ProductRow): Product {
     cantidadEspecial: row.cantidad_especial,
     stock: row.stock,
     stockMinimo: row.stock_minimo,
+    costoCompra: toNumber(row.costo_compra) ?? 0,
     habilitadoMayorista: row.habilitado_mayorista,
     imagenUrl: row.imagen_url,
     activo: row.activo,
@@ -27,4 +28,3 @@ export function mapProduct(row: ProductRow): Product {
     updatedAt: row.updated_at,
   };
 }
-

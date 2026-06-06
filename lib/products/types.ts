@@ -9,6 +9,7 @@ export type ProductRow = {
   cantidad_especial: number;
   stock: number;
   stock_minimo: number;
+  costo_compra?: number | string;
   habilitado_mayorista: boolean;
   imagen_url: string | null;
   activo: boolean;
@@ -27,6 +28,7 @@ export type Product = {
   cantidadEspecial: number;
   stock: number;
   stockMinimo: number;
+  costoCompra: number;
   habilitadoMayorista: boolean;
   imagenUrl: string | null;
   activo: boolean;
@@ -48,4 +50,3 @@ export type ProductInput = {
   imagenUrl: string | null;
   activo: boolean;
 };
-

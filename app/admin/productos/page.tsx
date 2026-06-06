@@ -56,13 +56,14 @@ export default async function AdminProductsPage({
 
       <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1060px] border-collapse text-left text-sm">
             <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
               <tr>
                 <th className="px-4 py-3">Producto</th>
                 <th className="px-4 py-3">Categoria</th>
                 <th className="px-4 py-3">Mostrador</th>
                 <th className="px-4 py-3">Mayorista</th>
+                <th className="px-4 py-3">Costo</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3">Acciones</th>
@@ -88,6 +89,9 @@ export default async function AdminProductsPage({
                     </td>
                     <td className="px-4 py-4 text-zinc-300">
                       {money(product.precioMayoristaFijo)}
+                    </td>
+                    <td className="px-4 py-4 text-zinc-300">
+                      {money(product.costoCompra)}
                     </td>
                     <td className="px-4 py-4">
                       <span
@@ -136,7 +140,7 @@ export default async function AdminProductsPage({
               })}
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-zinc-400">
+                  <td colSpan={8} className="px-4 py-10 text-center text-zinc-400">
                     No hay productos para mostrar.
                   </td>
                 </tr>

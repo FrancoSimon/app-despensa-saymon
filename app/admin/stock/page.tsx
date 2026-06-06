@@ -2,8 +2,15 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { listAdminProducts } from "@/lib/products/queries";
-import { registerStockMovementAction } from "@/lib/stock/actions";
-import { listRecentStockMovements } from "@/lib/stock/queries";
+import {
+  registerStockMovementAction,
+  registerStockPurchaseAction,
+} from "@/lib/stock/actions";
+import {
+  listActiveSuppliers,
+  listRecentStockMovements,
+  listRecentStockPurchases,
+} from "@/lib/stock/queries";
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString("es-AR", {
@@ -15,19 +22,48 @@ function formatDate(value: string) {
   });
 }
 
+function formatDateOnly(value: string) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function money(value: number) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function dateInputToday() {
+  const date = new Date();
+  const year = date.getFullYear().toString();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 const ORIGIN_LABELS = {
   manual: "Manual",
   venta_mostrador: "Mostrador",
   pedido_mayorista: "Mayorista",
+  compra: "Compra",
 };
 
 export default async function AdminStockPage() {
   const profile = await requireAdminProfile();
-  const [products, movements] = await Promise.all([
+  const [products, suppliers, purchases, movements] = await Promise.all([
     listAdminProducts(),
+    listActiveSuppliers(),
+    listRecentStockPurchases(),
     listRecentStockMovements(),
   ]);
   const activeProducts = products.filter((product) => product.activo);
+  const today = dateInputToday();
 
   return (
     <AppShell profile={profile} title="Stock">
@@ -40,9 +76,182 @@ export default async function AdminStockPage() {
         </Link>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
-          <h2 className="text-xl font-black text-white">Nuevo movimiento</h2>
+          <h2 className="text-xl font-black text-white">
+            Registrar compra / lote
+          </h2>
+          <form action={registerStockPurchaseAction} className="mt-5 grid gap-4">
+            <label className="text-sm font-semibold text-zinc-200">
+              Producto
+              <select
+                name="productoId"
+                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+                required
+              >
+                <option value="">Seleccionar producto</option>
+                {activeProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.nombre} - Stock {product.stock}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold text-zinc-200">
+                Proveedor existente
+                <select
+                  name="proveedorId"
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+                >
+                  <option value="">Crear nuevo o seleccionar</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Nuevo proveedor
+                <input
+                  name="proveedorNombre"
+                  placeholder="Nombre si no esta en la lista"
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold text-zinc-200">
+                Cantidad comprada
+                <input
+                  name="cantidad"
+                  type="number"
+                  min="1"
+                  step="1"
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+                  required
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Costo unitario
+                <input
+                  name="costoUnitario"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+                  required
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold text-zinc-200">
+                Fecha de compra
+                <input
+                  name="fechaCompra"
+                  type="date"
+                  defaultValue={today}
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
+                  required
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Comprobante
+                <input
+                  name="comprobante"
+                  placeholder="Factura, remito, ticket..."
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
+                />
+              </label>
+            </div>
+
+            <label className="text-sm font-semibold text-zinc-200">
+              Notas
+              <textarea
+                name="notas"
+                rows={3}
+                placeholder="Detalle del lote, vencimiento, condiciones..."
+                className="mt-2 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
+              />
+            </label>
+
+            <button className="rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200">
+              Registrar compra y sumar stock
+            </button>
+          </form>
+        </section>
+
+        <section className="rounded-lg border border-white/10 bg-black p-5">
+          <h2 className="text-xl font-black text-white">Compras recientes</h2>
+          <div className="mt-5 overflow-hidden rounded-md border border-white/10">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[840px] border-collapse text-left text-sm">
+                <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
+                  <tr>
+                    <th className="px-3 py-3">Fecha</th>
+                    <th className="px-3 py-3">Proveedor</th>
+                    <th className="px-3 py-3">Producto</th>
+                    <th className="px-3 py-3">Cant.</th>
+                    <th className="px-3 py-3">Costo unit.</th>
+                    <th className="px-3 py-3">Total</th>
+                    <th className="px-3 py-3">Comprobante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchases.map((purchase) => (
+                    <tr key={purchase.id} className="border-t border-white/10">
+                      <td className="px-3 py-3 text-zinc-400">
+                        {formatDateOnly(purchase.fechaCompra)}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">
+                        {purchase.proveedorNombre}
+                      </td>
+                      <td className="px-3 py-3">
+                        <p className="font-semibold text-white">
+                          {purchase.productoNombre}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          {purchase.productoCategoria}
+                        </p>
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">
+                        {purchase.cantidad}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">
+                        {money(purchase.costoUnitario)}
+                      </td>
+                      <td className="px-3 py-3 font-bold text-white">
+                        {money(purchase.costoTotal)}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-400">
+                        {purchase.comprobante ?? "-"}
+                      </td>
+                    </tr>
+                  ))}
+                  {purchases.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-3 py-8 text-center text-zinc-400"
+                      >
+                        No hay compras registradas.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+        <section className="rounded-lg border border-white/10 bg-black p-5">
+          <h2 className="text-xl font-black text-white">Movimiento manual</h2>
           <form action={registerStockMovementAction} className="mt-5 grid gap-4">
             <label className="text-sm font-semibold text-zinc-200">
               Producto
@@ -90,13 +299,13 @@ export default async function AdminStockPage() {
               <textarea
                 name="motivo"
                 rows={3}
-                placeholder="Compra, rotura, conteo manual..."
+                placeholder="Rotura, conteo manual, ajuste..."
                 className="mt-2 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
               />
             </label>
 
-            <button className="rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200">
-              Registrar movimiento
+            <button className="rounded-md border border-lime-300/70 px-5 py-3 text-sm font-black text-lime-100 transition hover:bg-lime-950">
+              Registrar ajuste manual
             </button>
           </form>
         </section>
