@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/app-shell";
 import { WholesaleOrderTerminal } from "@/components/wholesale/wholesale-order-terminal";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireWholesaleProfile } from "@/lib/auth/require-admin";
 import { listWholesaleProducts } from "@/lib/products/wholesale-queries";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { getWholesaleDeliveryOptions } from "@/lib/wholesale/dates";
@@ -15,11 +15,7 @@ export default async function WholesalePage() {
     redirect("/login");
   }
 
-  const { profile } = await getCurrentProfile();
-
-  if (!profile) {
-    return null;
-  }
+  const profile = await requireWholesaleProfile();
 
   const [products, orders] = await Promise.all([
     listWholesaleProducts(),

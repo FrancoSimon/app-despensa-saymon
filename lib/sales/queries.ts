@@ -23,6 +23,7 @@ function mapSaleTicket(row: SaleTicketRow): SaleTicket {
 
   return {
     id: row.id,
+    vendedorId: row.vendedor_id,
     fecha: row.fecha,
     estado: row.estado ?? "activa",
     anuladaAt: row.anulada_at ?? null,
@@ -79,6 +80,7 @@ export async function listAdminSales(
     .select(
       `
         id,
+        vendedor_id,
         fecha,
         estado,
         anulada_at,
@@ -114,6 +116,7 @@ export async function listAdminSales(
         .select(
           `
             id,
+            vendedor_id,
             fecha,
             forma_pago,
             total,
@@ -161,6 +164,7 @@ export async function getSaleTicket(id: string) {
     .select(
       `
         id,
+        vendedor_id,
         fecha,
         estado,
         anulada_at,
@@ -193,6 +197,7 @@ export async function getSaleTicket(id: string) {
         .select(
           `
             id,
+            vendedor_id,
             fecha,
             forma_pago,
             subtotal,

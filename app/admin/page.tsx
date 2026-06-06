@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/app-shell";
 import { ModuleCard } from "@/components/layout/module-card";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 import { getLowStockCount } from "@/lib/products/queries";
 import { getTodayReportDateRange } from "@/lib/reports/dates";
@@ -28,11 +28,7 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const { profile } = await getCurrentProfile();
-
-  if (!profile) {
-    return null;
-  }
+  const profile = await requireAdminProfile();
 
   const todayRange = getTodayReportDateRange();
   const todaySalesHref = `/admin/ventas?desde=${todayRange.from}&hasta=${todayRange.to}`;

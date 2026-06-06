@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { CashRegisterPanel } from "@/components/cash/cash-register-panel";
 import { AppShell } from "@/components/layout/app-shell";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireSellerProfile } from "@/lib/auth/require-admin";
 import {
   getCurrentCashRegister,
   listCashRegisterMovements,
@@ -17,11 +17,7 @@ export default async function SellerCashRegisterPage() {
     redirect("/login");
   }
 
-  const { profile } = await getCurrentProfile();
-
-  if (!profile || (profile.rol !== "admin" && profile.rol !== "vendedor")) {
-    redirect("/");
-  }
+  const profile = await requireSellerProfile();
 
   const cashRegister = await getCurrentCashRegister();
   const movements = cashRegister

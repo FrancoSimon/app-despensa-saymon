@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
 import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireSellerProfile } from "@/lib/auth/require-admin";
 import { cancelCounterSaleAction } from "@/lib/sales/actions";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import type { SaleTicket } from "@/lib/sales/types";
@@ -93,11 +93,7 @@ export default async function SaleTicketPage({
     redirect("/login");
   }
 
-  const { profile } = await getCurrentProfile();
-
-  if (!profile || (profile.rol !== "admin" && profile.rol !== "vendedor")) {
-    redirect("/");
-  }
+  const profile = await requireSellerProfile();
 
   const { id } = await params;
   const { volver } = await searchParams;
@@ -105,6 +101,10 @@ export default async function SaleTicketPage({
   const ticket = await getSaleTicket(id);
 
   if (!ticket) {
+    notFound();
+  }
+
+  if (profile.rol === "vendedor" && ticket.vendedorId !== profile.id) {
     notFound();
   }
 
