@@ -1,11 +1,9 @@
 ## Purpose
 
 Define product, price, barcode, image, and stock management for SAYMON.
-
 ## Requirements
-
 ### Requirement: Product CRUD
-The system SHALL allow admins to create, read, update, and deactivate products.
+The system SHALL allow admins to create, read, update, and deactivate products while preserving safe admin return paths.
 
 #### Scenario: Admin creates product
 - **WHEN** an admin submits a product form
@@ -17,6 +15,11 @@ The system SHALL allow admins to create, read, update, and deactivate products.
 - **THEN** the system marks it inactive or deleted logically
 - **AND** keeps the database record to preserve links with sales, invoices, orders, and reports
 - **AND** excludes inactive products from normal product selection unless an admin explicitly filters for them
+
+#### Scenario: Admin edits product from stock panel
+- **WHEN** an admin opens a product edit page from the stock panel
+- **THEN** the product edit page provides a back link to the stock panel
+- **AND** saving the product returns to the stock panel
 
 ### Requirement: Dual Pricing
 Each product SHALL support separate public counter and wholesale prices.
@@ -73,3 +76,11 @@ The system SHALL alert admins when product stock is below minimum stock.
 - **WHEN** `stock` is lower than `stockMinimo`
 - **THEN** the admin dashboard includes the product in the low-stock list
 - **AND** the low-stock card counts it
+
+### Requirement: Stock Panel Product Selection
+The admin stock panel SHALL support searchable product selection for stock operations.
+
+#### Scenario: Admin searches product in stock forms
+- **WHEN** an admin registers a purchase/lote or manual stock movement
+- **THEN** the admin can search products by name, category, or barcode before selecting the product
+- **AND** the submitted form contains the selected product id

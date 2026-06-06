@@ -24,6 +24,11 @@ export async function createProductAction(formData: FormData) {
 export async function updateProductAction(id: string, formData: FormData) {
   await requireAdminProfile();
   const payload = toProductPayload(parseProductForm(formData));
+  const volver = formData.get("volver");
+  const returnTo =
+    typeof volver === "string" && volver.startsWith("/admin/stock")
+      ? volver
+      : "/admin/productos";
   const supabase = await createClient();
   const { error } = await supabase.from("productos").update(payload).eq("id", id);
 
@@ -33,8 +38,9 @@ export async function updateProductAction(id: string, formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
+  revalidatePath("/admin/stock");
   revalidatePath(`/admin/productos/${id}/editar`);
-  redirect("/admin/productos");
+  redirect(returnTo);
 }
 
 export async function deactivateProductAction(formData: FormData) {
@@ -58,4 +64,3 @@ export async function deactivateProductAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
 }
-

@@ -8,11 +8,27 @@ import { getAdminProduct } from "@/lib/products/queries";
 
 type EditProductPageProps = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{
+    volver?: string;
+  }>;
 };
 
-export default async function EditProductPage({ params }: EditProductPageProps) {
+function getReturnHref(value: string | undefined) {
+  if (value?.startsWith("/admin/stock")) {
+    return value;
+  }
+
+  return "/admin/productos";
+}
+
+export default async function EditProductPage({
+  params,
+  searchParams,
+}: EditProductPageProps) {
   const profile = await requireAdminProfile();
   const { id } = await params;
+  const { volver } = await searchParams;
+  const returnHref = getReturnHref(volver);
   const action = updateProductAction.bind(null, id);
   const product = await getAdminProduct(id).catch(() => null);
 
@@ -24,10 +40,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     <AppShell profile={profile} title={`Editar ${product.nombre}`}>
       <div className="mb-5">
         <Link
-          href="/admin/productos"
+          href={returnHref}
           className="text-sm font-semibold text-lime-200 hover:text-lime-100"
         >
-          Volver a productos
+          {returnHref === "/admin/productos" ? "Volver a productos" : "Volver a stock"}
         </Link>
       </div>
       <section className="rounded-lg border border-white/10 bg-zinc-950 p-5">
@@ -35,6 +51,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
           action={action}
           product={product}
           submitLabel="Guardar cambios"
+          returnTo={returnHref}
         />
       </section>
     </AppShell>

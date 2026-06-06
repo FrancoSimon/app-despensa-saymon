@@ -8,6 +8,7 @@ type ProductFormProps = {
   action: (formData: FormData) => void | Promise<void>;
   product?: Product;
   submitLabel: string;
+  returnTo?: string;
 };
 
 const inputClass =
@@ -15,11 +16,18 @@ const inputClass =
 
 const labelClass = "mb-2 block text-sm font-medium text-zinc-200";
 
-export function ProductForm({ action, product, submitLabel }: ProductFormProps) {
+export function ProductForm({
+  action,
+  product,
+  submitLabel,
+  returnTo,
+}: ProductFormProps) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   return (
     <form action={action} className="grid gap-5">
+      {returnTo ? <input type="hidden" name="volver" value={returnTo} /> : null}
+
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label className={labelClass}>Nombre</label>

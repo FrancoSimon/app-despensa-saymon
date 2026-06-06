@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { StockProductSelector } from "@/components/stock/stock-product-selector";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { listAdminProducts } from "@/lib/products/queries";
 import {
@@ -117,7 +118,7 @@ export default async function AdminStockPage() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
-                  href={`/admin/productos/${product.id}/editar`}
+                  href={`/admin/productos/${product.id}/editar?volver=${encodeURIComponent("/admin/stock")}`}
                   className="rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-zinc-200 transition hover:border-lime-300 hover:text-lime-200"
                 >
                   Editar producto
@@ -140,21 +141,11 @@ export default async function AdminStockPage() {
             Registrar compra / lote
           </h2>
           <form action={registerStockPurchaseAction} className="mt-5 grid gap-4">
-            <label className="text-sm font-semibold text-zinc-200">
-              Producto
-              <select
-                name="productoId"
-                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
-                required
-              >
-                <option value="">Seleccionar producto</option>
-                {activeProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.nombre} - Stock {product.stock}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StockProductSelector
+              products={activeProducts}
+              name="productoId"
+              label="Producto"
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold text-zinc-200">
@@ -311,21 +302,11 @@ export default async function AdminStockPage() {
         <section className="rounded-lg border border-white/10 bg-black p-5">
           <h2 className="text-xl font-black text-white">Movimiento manual</h2>
           <form action={registerStockMovementAction} className="mt-5 grid gap-4">
-            <label className="text-sm font-semibold text-zinc-200">
-              Producto
-              <select
-                name="productoId"
-                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-sm text-white outline-none transition focus:border-lime-300"
-                required
-              >
-                <option value="">Seleccionar producto</option>
-                {activeProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.nombre} - Stock {product.stock}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <StockProductSelector
+              products={activeProducts}
+              name="productoId"
+              label="Producto"
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold text-zinc-200">
