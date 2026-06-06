@@ -60,8 +60,20 @@ export function PosTerminal({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerOptions, setCustomerOptions] = useState(customers);
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [newCustomerPhone, setNewCustomerPhone] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [customerForm, setCustomerForm] = useState({
+    nombre: "",
+    telefono: "",
+    email: "",
+    razonSocial: "",
+    documentoTipo: "",
+    documentoNumero: "",
+    condicionIva: "",
+    direccion: "",
+    localidad: "",
+    notas: "",
+  });
   const [discount, setDiscount] = useState(0);
   const [surcharge, setSurcharge] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("efectivo");
@@ -105,6 +117,24 @@ export function PosTerminal({
   const selectedCustomer =
     customerOptions.find((customer) => customer.id === selectedCustomerId) ??
     null;
+  const customerMatches = useMemo(() => {
+    const term = customerSearch.trim().toLowerCase();
+
+    if (!term) {
+      return customerOptions.slice(0, 6);
+    }
+
+    return customerOptions
+      .filter(
+        (customer) =>
+          customer.nombre.toLowerCase().includes(term) ||
+          customer.telefono?.toLowerCase().includes(term) ||
+          customer.email?.toLowerCase().includes(term) ||
+          customer.razonSocial?.toLowerCase().includes(term) ||
+          customer.documentoNumero?.toLowerCase().includes(term),
+      )
+      .slice(0, 6);
+  }, [customerOptions, customerSearch]);
 
   function addProduct(product: Product) {
     setTicket(null);
@@ -179,6 +209,7 @@ export function PosTerminal({
         setDiscount(0);
         setSurcharge(0);
         setSelectedCustomerId("");
+        setCustomerSearch("");
       } catch (saleError) {
         setError(
           saleError instanceof Error
@@ -195,16 +226,36 @@ export function PosTerminal({
     startCustomerTransition(async () => {
       try {
         const customer = await createQuickCustomerAction({
-          nombre: newCustomerName,
-          telefono: newCustomerPhone,
-          email: null,
-          notas: null,
+          nombre: customerForm.nombre,
+          telefono: customerForm.telefono,
+          email: customerForm.email,
+          razonSocial: customerForm.razonSocial,
+          documentoTipo: customerForm.documentoTipo,
+          documentoNumero: customerForm.documentoNumero,
+          condicionIva: customerForm.condicionIva,
+          direccion: customerForm.direccion,
+          localidad: customerForm.localidad,
+          notas: customerForm.notas,
         });
 
-        setCustomerOptions((current) => [...current, customer]);
+        setCustomerOptions((current) =>
+          [...current, customer].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+        );
         setSelectedCustomerId(customer.id);
-        setNewCustomerName("");
-        setNewCustomerPhone("");
+        setCustomerSearch(customer.nombre);
+        setCustomerForm({
+          nombre: "",
+          telefono: "",
+          email: "",
+          razonSocial: "",
+          documentoTipo: "",
+          documentoNumero: "",
+          condicionIva: "",
+          direccion: "",
+          localidad: "",
+          notas: "",
+        });
+        setIsCustomerModalOpen(false);
       } catch (customerError) {
         setError(
           customerError instanceof Error
@@ -213,6 +264,10 @@ export function PosTerminal({
         );
       }
     });
+  }
+
+  function updateCustomerForm(key: keyof typeof customerForm, value: string) {
+    setCustomerForm((current) => ({ ...current, [key]: value }));
   }
 
   return (
@@ -362,44 +417,68 @@ export function PosTerminal({
 
         <div className="mt-5 grid gap-3">
           <div className="rounded-md border border-white/10 bg-zinc-950 p-4">
-            <label className="text-sm font-semibold text-zinc-200">
-              Cliente opcional
-              <select
-                value={selectedCustomerId}
-                onChange={(event) => setSelectedCustomerId(event.target.value)}
-                className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition focus:border-lime-300"
-              >
-                <option value="">Consumidor final</option>
-                {customerOptions.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.nombre}
-                    {customer.telefono ? ` - ${customer.telefono}` : ""}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_0.8fr_auto]">
-              <input
-                value={newCustomerName}
-                onChange={(event) => setNewCustomerName(event.target.value)}
-                placeholder="Nuevo cliente"
-                className="h-10 rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-lime-300"
-              />
-              <input
-                value={newCustomerPhone}
-                onChange={(event) => setNewCustomerPhone(event.target.value)}
-                placeholder="Telefono"
-                className="h-10 rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-lime-300"
-              />
+            <div className="flex items-center justify-between gap-3">
+              <label className="min-w-0 flex-1 text-sm font-semibold text-zinc-200">
+                Cliente opcional
+                <input
+                  value={customerSearch}
+                  onChange={(event) => setCustomerSearch(event.target.value)}
+                  placeholder="Buscar por nombre, telefono o documento"
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-lime-300"
+                />
+              </label>
               <button
                 type="button"
-                onClick={createCustomer}
-                disabled={isCreatingCustomer || !newCustomerName.trim()}
-                className="rounded-md border border-lime-300/70 px-3 py-2 text-sm font-black text-lime-100 transition hover:bg-lime-950 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => setIsCustomerModalOpen(true)}
+                className="mt-7 h-11 rounded-md bg-lime-300 px-4 text-sm font-black text-black transition hover:bg-lime-200"
               >
-                {isCreatingCustomer ? "Guardando..." : "Crear"}
+                Crear
               </button>
+            </div>
+            <div className="mt-3 grid gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCustomerId("");
+                  setCustomerSearch("");
+                }}
+                className={
+                  selectedCustomerId
+                    ? "rounded-md border border-white/10 px-3 py-2 text-left text-sm font-semibold text-zinc-300"
+                    : "rounded-md bg-white/10 px-3 py-2 text-left text-sm font-black text-white"
+                }
+              >
+                Consumidor final
+              </button>
+              {customerMatches.map((customer) => (
+                <button
+                  key={customer.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCustomerId(customer.id);
+                    setCustomerSearch(customer.nombre);
+                  }}
+                  className={
+                    selectedCustomerId === customer.id
+                      ? "rounded-md border border-lime-300 bg-lime-950/40 px-3 py-2 text-left"
+                      : "rounded-md border border-white/10 px-3 py-2 text-left transition hover:border-lime-300"
+                  }
+                >
+                  <span className="block text-sm font-bold text-white">
+                    {customer.nombre}
+                  </span>
+                  <span className="mt-1 block text-xs text-zinc-500">
+                    {[customer.telefono, customer.documentoNumero]
+                      .filter(Boolean)
+                      .join(" - ") || "Sin datos de contacto"}
+                  </span>
+                </button>
+              ))}
+              {customerMatches.length === 0 ? (
+                <p className="rounded-md border border-white/10 px-3 py-3 text-center text-sm text-zinc-500">
+                  No hay clientes para esa busqueda.
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -538,6 +617,167 @@ export function PosTerminal({
           </div>
         ) : null}
       </section>
+
+      {isCustomerModalOpen ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
+          <div className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-lg border border-white/10 bg-zinc-950 p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
+                  Cliente
+                </p>
+                <h3 className="mt-1 text-2xl font-black text-white">
+                  Crear cliente
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(false)}
+                className="rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold text-zinc-200">
+                Nombre
+                <input
+                  value={customerForm.nombre}
+                  onChange={(event) =>
+                    updateCustomerForm("nombre", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                  required
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Telefono
+                <input
+                  value={customerForm.telefono}
+                  onChange={(event) =>
+                    updateCustomerForm("telefono", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Email
+                <input
+                  value={customerForm.email}
+                  onChange={(event) =>
+                    updateCustomerForm("email", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Razon social
+                <input
+                  value={customerForm.razonSocial}
+                  onChange={(event) =>
+                    updateCustomerForm("razonSocial", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Tipo documento
+                <select
+                  value={customerForm.documentoTipo}
+                  onChange={(event) =>
+                    updateCustomerForm("documentoTipo", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                >
+                  <option value="">Sin documento</option>
+                  <option value="DNI">DNI</option>
+                  <option value="CUIT">CUIT</option>
+                  <option value="CUIL">CUIL</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Numero documento
+                <input
+                  value={customerForm.documentoNumero}
+                  onChange={(event) =>
+                    updateCustomerForm("documentoNumero", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Condicion IVA
+                <select
+                  value={customerForm.condicionIva}
+                  onChange={(event) =>
+                    updateCustomerForm("condicionIva", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                >
+                  <option value="">Sin especificar</option>
+                  <option value="Consumidor final">Consumidor final</option>
+                  <option value="Monotributo">Monotributo</option>
+                  <option value="Responsable inscripto">
+                    Responsable inscripto
+                  </option>
+                  <option value="Exento">Exento</option>
+                </select>
+              </label>
+              <label className="text-sm font-semibold text-zinc-200">
+                Localidad
+                <input
+                  value={customerForm.localidad}
+                  onChange={(event) =>
+                    updateCustomerForm("localidad", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200 sm:col-span-2">
+                Direccion
+                <input
+                  value={customerForm.direccion}
+                  onChange={(event) =>
+                    updateCustomerForm("direccion", event.target.value)
+                  }
+                  className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+              <label className="text-sm font-semibold text-zinc-200 sm:col-span-2">
+                Notas
+                <textarea
+                  value={customerForm.notas}
+                  onChange={(event) =>
+                    updateCustomerForm("notas", event.target.value)
+                  }
+                  rows={3}
+                  className="mt-2 w-full resize-none rounded-md border border-white/10 bg-black px-3 py-3 text-sm text-white outline-none focus:border-lime-300"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(false)}
+                className="rounded-md border border-white/10 px-5 py-3 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={createCustomer}
+                disabled={isCreatingCustomer || !customerForm.nombre.trim()}
+                className="rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isCreatingCustomer ? "Guardando..." : "Crear cliente"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

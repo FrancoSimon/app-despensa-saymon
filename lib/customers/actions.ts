@@ -16,6 +16,12 @@ function mapCustomer(row: CustomerRow): Customer {
     nombre: row.nombre,
     telefono: row.telefono,
     email: row.email,
+    razonSocial: row.razon_social ?? null,
+    documentoTipo: row.documento_tipo ?? null,
+    documentoNumero: row.documento_numero ?? null,
+    condicionIva: row.condicion_iva ?? null,
+    direccion: row.direccion ?? null,
+    localidad: row.localidad ?? null,
     notas: row.notas,
     activo: row.activo,
     createdAt: row.created_at,
@@ -24,13 +30,31 @@ function mapCustomer(row: CustomerRow): Customer {
 }
 
 export async function createQuickCustomerAction(
-  input: Pick<Customer, "nombre" | "telefono" | "email" | "notas">,
+  input: Pick<
+    Customer,
+    | "nombre"
+    | "telefono"
+    | "email"
+    | "razonSocial"
+    | "documentoTipo"
+    | "documentoNumero"
+    | "condicionIva"
+    | "direccion"
+    | "localidad"
+    | "notas"
+  >,
 ) {
   await requireSellerProfile();
 
   const nombre = input.nombre.trim();
   const telefono = input.telefono?.trim() || null;
   const email = input.email?.trim() || null;
+  const razonSocial = input.razonSocial?.trim() || null;
+  const documentoTipo = input.documentoTipo?.trim() || null;
+  const documentoNumero = input.documentoNumero?.trim() || null;
+  const condicionIva = input.condicionIva?.trim() || null;
+  const direccion = input.direccion?.trim() || null;
+  const localidad = input.localidad?.trim() || null;
   const notas = input.notas?.trim() || null;
 
   if (!nombre) {
@@ -40,8 +64,21 @@ export async function createQuickCustomerAction(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clientes")
-    .insert({ nombre, telefono, email, notas })
-    .select("id, nombre, telefono, email, notas, activo, created_at, updated_at")
+    .insert({
+      nombre,
+      telefono,
+      email,
+      razon_social: razonSocial,
+      documento_tipo: documentoTipo,
+      documento_numero: documentoNumero,
+      condicion_iva: condicionIva,
+      direccion,
+      localidad,
+      notas,
+    })
+    .select(
+      "id, nombre, telefono, email, razon_social, documento_tipo, documento_numero, condicion_iva, direccion, localidad, notas, activo, created_at, updated_at",
+    )
     .single<CustomerRow>();
 
   if (error) {
@@ -57,6 +94,12 @@ export async function createQuickCustomerFormAction(formData: FormData) {
     nombre: readOptionalText(formData, "nombre") ?? "",
     telefono: readOptionalText(formData, "telefono"),
     email: readOptionalText(formData, "email"),
+    razonSocial: readOptionalText(formData, "razonSocial"),
+    documentoTipo: readOptionalText(formData, "documentoTipo"),
+    documentoNumero: readOptionalText(formData, "documentoNumero"),
+    condicionIva: readOptionalText(formData, "condicionIva"),
+    direccion: readOptionalText(formData, "direccion"),
+    localidad: readOptionalText(formData, "localidad"),
     notas: readOptionalText(formData, "notas"),
   });
 }
