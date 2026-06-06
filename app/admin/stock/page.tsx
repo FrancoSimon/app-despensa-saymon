@@ -63,6 +63,9 @@ export default async function AdminStockPage() {
     listRecentStockMovements(),
   ]);
   const activeProducts = products.filter((product) => product.activo);
+  const lowStockProducts = activeProducts
+    .filter((product) => product.stock < product.stockMinimo)
+    .sort((a, b) => a.stock - b.stock || a.nombre.localeCompare(b.nombre));
   const today = dateInputToday();
 
   return (
@@ -75,6 +78,61 @@ export default async function AdminStockPage() {
           Volver al panel
         </Link>
       </div>
+
+      <section className="mb-6 rounded-lg border border-yellow-300/20 bg-black p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black text-white">
+              Productos con stock bajo
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Productos activos por debajo del minimo configurado.
+            </p>
+          </div>
+          <p className="rounded-md bg-yellow-300 px-3 py-2 text-sm font-black text-black">
+            {lowStockProducts.length}
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {lowStockProducts.map((product) => (
+            <article
+              key={product.id}
+              className="rounded-md border border-white/10 bg-zinc-950 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-black text-white">{product.nombre}</h3>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    {product.categoria}
+                  </p>
+                </div>
+                <p className="shrink-0 text-right text-lg font-black text-yellow-200">
+                  {product.stock}
+                  <span className="text-sm text-zinc-500">
+                    {" "}
+                    / min {product.stockMinimo}
+                  </span>
+                </p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href={`/admin/productos/${product.id}/editar`}
+                  className="rounded-md border border-white/10 px-3 py-2 text-xs font-bold text-zinc-200 transition hover:border-lime-300 hover:text-lime-200"
+                >
+                  Editar producto
+                </Link>
+              </div>
+            </article>
+          ))}
+
+          {lowStockProducts.length === 0 ? (
+            <p className="rounded-md border border-white/10 bg-zinc-950 p-6 text-center text-zinc-400 md:col-span-2 xl:col-span-3">
+              No hay productos con stock bajo.
+            </p>
+          ) : null}
+        </div>
+      </section>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
