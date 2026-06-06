@@ -38,35 +38,56 @@ function formatDateTime(value: string) {
   });
 }
 
+function shortId(value: string) {
+  return value.slice(0, 8).toUpperCase();
+}
+
+function statusLabel(ticket: SaleTicket) {
+  return ticket.estado === "anulada" ? "Anulada" : "Activa";
+}
+
+function adjustmentLabel(label: string, percentage: number) {
+  return percentage > 0 ? `${label} ${percentage}%` : label;
+}
+
 function buildWhatsAppMessage(ticket: SaleTicket) {
   const lines = [
     ticket.estado === "anulada"
-      ? "SAYMON - Ticket interno ANULADO"
-      : "SAYMON - Ticket interno",
+      ? "Comercio SAYMON - Comprobante interno ANULADO"
+      : "Comercio SAYMON - Comprobante interno",
     "No valido como factura",
     "",
-    `Venta: #${ticket.id.slice(0, 8)}`,
+    `Venta: #${shortId(ticket.id)}`,
+    ...(ticket.cajaId ? [`Caja: #${shortId(ticket.cajaId)}`] : []),
+    `Estado: ${statusLabel(ticket)}`,
     `Fecha: ${formatDateTime(ticket.fecha)}`,
+    `Vendedor: ${ticket.vendedorNombre}`,
+    `Pago: ${paymentMethodLabels[ticket.formaPago]}`,
     ...(ticket.estado === "anulada"
       ? [
           `Anulada: ${ticket.anuladaAt ? formatDateTime(ticket.anuladaAt) : "-"}`,
           `Motivo: ${ticket.motivoAnulacion ?? "-"}`,
         ]
       : []),
-    `Pago: ${paymentMethodLabels[ticket.formaPago]}`,
     "",
     "Productos:",
     ...ticket.items.map(
       (item) =>
-        `${item.cantidad} x ${item.productoNombre} - ${money(item.subtotal)}`,
+        `${item.cantidad} x ${item.productoNombre} (${money(
+          item.precioUnitario,
+        )}) - ${money(item.subtotal)}`,
     ),
     "",
     `Subtotal: ${money(ticket.subtotal)}`,
-    `Descuento ${ticket.descuentoPorcentaje}%: - ${money(ticket.descuentoMonto)}`,
-    `Recargo ${ticket.recargoPorcentaje}%: + ${money(ticket.recargoMonto)}`,
+    `${adjustmentLabel("Descuento", ticket.descuentoPorcentaje)}: - ${money(
+      ticket.descuentoMonto,
+    )}`,
+    `${adjustmentLabel("Recargo", ticket.recargoPorcentaje)}: + ${money(
+      ticket.recargoMonto,
+    )}`,
     `Total: ${money(ticket.total)}`,
     "",
-    "Comercio SAYMON",
+    "Registro interno sin validez fiscal",
   ];
 
   return lines.join("\n");
@@ -133,11 +154,12 @@ export default async function SaleTicketPage({
             width={72}
             height={72}
             className="mx-auto size-18 rounded-full object-cover grayscale"
-            priority
           />
-          <h1 className="mt-3 text-2xl font-black tracking-wide">SAYMON</h1>
+          <h1 className="mt-3 text-2xl font-black tracking-wide">
+            Comercio SAYMON
+          </h1>
           <p className="mt-1 text-xs uppercase tracking-wide">
-            Ticket interno de venta
+            Comprobante interno
           </p>
           <p className="mt-2 text-[11px] font-bold uppercase">
             No valido como factura
@@ -152,7 +174,17 @@ export default async function SaleTicketPage({
         <section className="border-b border-dashed border-zinc-400 py-4">
           <div className="flex justify-between gap-4">
             <span>Venta</span>
-            <strong>#{ticket.id.slice(0, 8)}</strong>
+            <strong>#{shortId(ticket.id)}</strong>
+          </div>
+          {ticket.cajaId ? (
+            <div className="mt-1 flex justify-between gap-4">
+              <span>Caja</span>
+              <strong>#{shortId(ticket.cajaId)}</strong>
+            </div>
+          ) : null}
+          <div className="mt-1 flex justify-between gap-4">
+            <span>Estado</span>
+            <strong>{statusLabel(ticket)}</strong>
           </div>
           <div className="mt-1 flex justify-between gap-4">
             <span>Fecha</span>
@@ -183,6 +215,10 @@ export default async function SaleTicketPage({
         </section>
 
         <section className="border-b border-dashed border-zinc-400 py-4">
+          <div className="mb-3 grid grid-cols-[1fr_3.5rem] gap-3 border-b border-zinc-300 pb-2 text-[11px] font-bold uppercase tracking-wide">
+            <span>Detalle</span>
+            <span className="text-right">Importe</span>
+          </div>
           <div className="grid gap-3">
             {ticket.items.map((item) => (
               <div key={item.id}>
@@ -204,11 +240,13 @@ export default async function SaleTicketPage({
             <strong>{money(ticket.subtotal)}</strong>
           </div>
           <div className="mt-1 flex justify-between gap-4">
-            <span>Descuento {ticket.descuentoPorcentaje}%</span>
+            <span>
+              {adjustmentLabel("Descuento", ticket.descuentoPorcentaje)}
+            </span>
             <strong>- {money(ticket.descuentoMonto)}</strong>
           </div>
           <div className="mt-1 flex justify-between gap-4">
-            <span>Recargo {ticket.recargoPorcentaje}%</span>
+            <span>{adjustmentLabel("Recargo", ticket.recargoPorcentaje)}</span>
             <strong>+ {money(ticket.recargoMonto)}</strong>
           </div>
           <div className="mt-3 flex justify-between gap-4 text-lg font-black">
@@ -218,6 +256,7 @@ export default async function SaleTicketPage({
         </section>
 
         <footer className="pt-4 text-center text-[11px] uppercase leading-5">
+          <p>Gracias por su compra</p>
           <p>Comercio SAYMON</p>
           <p>Registro interno sin validez fiscal</p>
         </footer>

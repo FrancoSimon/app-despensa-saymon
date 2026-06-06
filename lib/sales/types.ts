@@ -48,6 +48,7 @@ export type SaleTicketItemRow = {
 export type SaleTicketRow = {
   id: string;
   vendedor_id: string;
+  caja_id?: string | null;
   fecha: string;
   estado?: SaleStatus;
   anulada_at?: string | null;
@@ -74,6 +75,7 @@ export type SaleTicketItem = {
 export type SaleTicket = {
   id: string;
   vendedorId: string;
+  cajaId: string | null;
   fecha: string;
   estado: SaleStatus;
   anuladaAt: string | null;

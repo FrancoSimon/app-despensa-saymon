@@ -13,17 +13,23 @@ function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
 }
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 function mapSaleTicket(row: SaleTicketRow): SaleTicket {
   const subtotal = toNumber(row.subtotal);
   const descuentoPorcentaje = toNumber(row.descuento_porcentaje);
   const recargoPorcentaje = toNumber(row.recargo_porcentaje);
-  const descuentoMonto = Math.round(subtotal * descuentoPorcentaje) / 100;
-  const recargoMonto =
-    Math.round((subtotal - descuentoMonto) * recargoPorcentaje) / 100;
+  const descuentoMonto = roundMoney((subtotal * descuentoPorcentaje) / 100);
+  const recargoMonto = roundMoney(
+    ((subtotal - descuentoMonto) * recargoPorcentaje) / 100,
+  );
 
   return {
     id: row.id,
     vendedorId: row.vendedor_id,
+    cajaId: row.caja_id ?? null,
     fecha: row.fecha,
     estado: row.estado ?? "activa",
     anuladaAt: row.anulada_at ?? null,
@@ -165,6 +171,7 @@ export async function getSaleTicket(id: string) {
       `
         id,
         vendedor_id,
+        caja_id,
         fecha,
         estado,
         anulada_at,
@@ -198,6 +205,7 @@ export async function getSaleTicket(id: string) {
           `
             id,
             vendedor_id,
+            caja_id,
             fecha,
             forma_pago,
             subtotal,
