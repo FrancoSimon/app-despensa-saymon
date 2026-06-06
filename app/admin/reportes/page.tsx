@@ -4,8 +4,10 @@ import { CsvExportButton } from "@/components/reports/csv-export-button";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { createReportDateRange } from "@/lib/reports/dates";
 import {
+  getCashRegisterReportSummary,
   getCanceledSalesCount,
   getSalesSummary,
+  listCashRegisterReportRows,
   listBestSellingProducts,
   listDailySales,
   listLowStockProductsForReport,
@@ -35,6 +37,20 @@ function dateLabel(value: string) {
   });
 }
 
+function dateTimeLabel(value: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  return new Date(value).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default async function AdminReportsPage({
   searchParams,
 }: AdminReportsPageProps) {
@@ -48,6 +64,8 @@ export default async function AdminReportsPage({
     lowStockProducts,
     wholesaleStatusCounts,
     canceledSalesCount,
+    cashRegisterSummary,
+    cashRegisterRows,
   ] = await Promise.all([
     getSalesSummary(range),
     listDailySales(range),
@@ -55,6 +73,8 @@ export default async function AdminReportsPage({
     listLowStockProductsForReport(),
     listWholesaleOrderStatusCounts(range),
     getCanceledSalesCount(range),
+    getCashRegisterReportSummary(range),
+    listCashRegisterReportRows(range),
   ]);
 
   return (
@@ -159,6 +179,69 @@ export default async function AdminReportsPage({
             {canceledSalesCount}
           </p>
         </Link>
+        <Link
+          href="/admin/cajas"
+          className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
+        >
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Cajas
+          </p>
+          <p className="mt-3 text-2xl font-black text-lime-300">
+            {cashRegisterSummary.count}
+          </p>
+          <p className="mt-1 text-sm text-zinc-400">
+            {cashRegisterSummary.closedCount} cerradas
+          </p>
+        </Link>
+      </div>
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Efectivo esperado
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(cashRegisterSummary.expectedCashTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Efectivo contado
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(cashRegisterSummary.countedCashTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Diferencia caja
+          </p>
+          <p
+            className={
+              cashRegisterSummary.cashDifferenceTotal < 0
+                ? "mt-3 text-2xl font-black text-red-100"
+                : "mt-3 text-2xl font-black text-lime-300"
+            }
+          >
+            {money(cashRegisterSummary.cashDifferenceTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Ingresos caja
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(cashRegisterSummary.incomeMovementsTotal)}
+          </p>
+        </article>
+        <article className="rounded-lg border border-white/10 bg-black p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Retiros caja
+          </p>
+          <p className="mt-3 text-2xl font-black text-white">
+            {money(cashRegisterSummary.withdrawalMovementsTotal)}
+          </p>
+        </article>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
@@ -238,6 +321,99 @@ export default async function AdminReportsPage({
           </div>
         </section>
       </div>
+
+      <section className="mt-6 rounded-lg border border-white/10 bg-black p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-black text-white">Cajas del periodo</h2>
+          <Link
+            href="/admin/cajas"
+            className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+          >
+            Ver todas
+          </Link>
+        </div>
+        <div className="mt-4 overflow-x-auto rounded-md border border-white/10">
+          <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+            <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
+              <tr>
+                <th className="px-3 py-3">Caja</th>
+                <th className="px-3 py-3">Operador</th>
+                <th className="px-3 py-3">Apertura</th>
+                <th className="px-3 py-3">Cierre</th>
+                <th className="px-3 py-3">Ventas</th>
+                <th className="px-3 py-3">Esperado</th>
+                <th className="px-3 py-3">Contado</th>
+                <th className="px-3 py-3">Dif.</th>
+                <th className="px-3 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cashRegisterRows.map((cashRegister) => (
+                <tr key={cashRegister.id} className="border-t border-white/10">
+                  <td className="px-3 py-3 font-black text-white">
+                    #{cashRegister.id.slice(0, 8)}
+                    <span
+                      className={
+                        cashRegister.status === "abierta"
+                          ? "ml-2 rounded bg-lime-300 px-2 py-1 text-[10px] uppercase text-black"
+                          : "ml-2 rounded bg-zinc-700 px-2 py-1 text-[10px] uppercase text-white"
+                      }
+                    >
+                      {cashRegister.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-zinc-300">
+                    {cashRegister.operatorName}
+                  </td>
+                  <td className="px-3 py-3 text-zinc-300">
+                    {dateTimeLabel(cashRegister.openedAt)}
+                  </td>
+                  <td className="px-3 py-3 text-zinc-300">
+                    {dateTimeLabel(cashRegister.closedAt)}
+                  </td>
+                  <td className="px-3 py-3 text-zinc-300">
+                    {cashRegister.salesCount} / {money(cashRegister.salesTotal)}
+                  </td>
+                  <td className="px-3 py-3 font-bold text-white">
+                    {money(cashRegister.expectedCash)}
+                  </td>
+                  <td className="px-3 py-3 text-zinc-300">
+                    {cashRegister.countedCash === null
+                      ? "-"
+                      : money(cashRegister.countedCash)}
+                  </td>
+                  <td
+                    className={
+                      (cashRegister.cashDifference ?? 0) < 0
+                        ? "px-3 py-3 font-bold text-red-100"
+                        : "px-3 py-3 font-bold text-lime-300"
+                    }
+                  >
+                    {cashRegister.cashDifference === null
+                      ? "-"
+                      : money(cashRegister.cashDifference)}
+                  </td>
+                  <td className="px-3 py-3">
+                    <Link
+                      href={`/admin/cajas/${cashRegister.id}`}
+                      className="rounded-md border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
+                    >
+                      Detalle
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+              {cashRegisterRows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-3 py-8 text-center text-zinc-400">
+                    Sin cajas en el periodo.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">

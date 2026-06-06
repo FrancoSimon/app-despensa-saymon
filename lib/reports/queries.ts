@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { ProductRow } from "@/lib/products/types";
 import type {
   BestSellerRow,
+  CashMovementReportDbRow,
+  CashRegisterReportDbRow,
+  CashRegisterReportRow,
+  CashRegisterReportSummary,
   DailySalesRow,
   LowStockReportRow,
   ReportDateRange,
@@ -29,6 +33,19 @@ function emptySummary(): SalesSummary {
     qrTotal: 0,
     cardTotal: 0,
     transferTotal: 0,
+  };
+}
+
+function emptyCashRegisterSummary(): CashRegisterReportSummary {
+  return {
+    count: 0,
+    openCount: 0,
+    closedCount: 0,
+    expectedCashTotal: 0,
+    countedCashTotal: 0,
+    cashDifferenceTotal: 0,
+    incomeMovementsTotal: 0,
+    withdrawalMovementsTotal: 0,
   };
 }
 
@@ -371,4 +388,148 @@ export async function listWholesaleOrderStatusCounts(range: ReportDateRange) {
   }
 
   return statuses;
+}
+
+export async function getCashRegisterReportSummary(range: ReportDateRange) {
+  const supabase = await createClient();
+  const [{ data: cashRegisters, error }, movementResult] = await Promise.all([
+    supabase
+      .from("cajas")
+      .select(
+        `
+          estado,
+          efectivo_esperado,
+          efectivo_real,
+          diferencia_efectivo
+        `,
+      )
+      .gte("abierta_at", range.fromIso)
+      .lt("abierta_at", range.toIsoExclusive)
+      .returns<
+        Pick<
+          CashRegisterReportDbRow,
+          | "estado"
+          | "efectivo_esperado"
+          | "efectivo_real"
+          | "diferencia_efectivo"
+        >[]
+      >(),
+    supabase
+      .from("caja_movimientos")
+      .select("tipo, monto")
+      .gte("created_at", range.fromIso)
+      .lt("created_at", range.toIsoExclusive)
+      .returns<CashMovementReportDbRow[]>(),
+  ]);
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return emptyCashRegisterSummary();
+    }
+
+    throw new Error(error.message);
+  }
+
+  const summary = cashRegisters.reduce<CashRegisterReportSummary>(
+    (totals, cashRegister) => ({
+      count: totals.count + 1,
+      openCount:
+        totals.openCount + (cashRegister.estado === "abierta" ? 1 : 0),
+      closedCount:
+        totals.closedCount + (cashRegister.estado === "cerrada" ? 1 : 0),
+      expectedCashTotal:
+        totals.expectedCashTotal + toNumber(cashRegister.efectivo_esperado),
+      countedCashTotal:
+        totals.countedCashTotal +
+        (cashRegister.efectivo_real === null
+          ? 0
+          : toNumber(cashRegister.efectivo_real)),
+      cashDifferenceTotal:
+        totals.cashDifferenceTotal +
+        (cashRegister.diferencia_efectivo === null
+          ? 0
+          : toNumber(cashRegister.diferencia_efectivo)),
+      incomeMovementsTotal: totals.incomeMovementsTotal,
+      withdrawalMovementsTotal: totals.withdrawalMovementsTotal,
+    }),
+    emptyCashRegisterSummary(),
+  );
+
+  if (movementResult.error) {
+    if (
+      movementResult.error.code !== "42P01" &&
+      movementResult.error.code !== "PGRST205"
+    ) {
+      throw new Error(movementResult.error.message);
+    }
+
+    return summary;
+  }
+
+  return movementResult.data.reduce<CashRegisterReportSummary>(
+    (totals, movement) => ({
+      ...totals,
+      incomeMovementsTotal:
+        totals.incomeMovementsTotal +
+        (movement.tipo === "ingreso" ? toNumber(movement.monto) : 0),
+      withdrawalMovementsTotal:
+        totals.withdrawalMovementsTotal +
+        (movement.tipo === "retiro" ? toNumber(movement.monto) : 0),
+    }),
+    summary,
+  );
+}
+
+export async function listCashRegisterReportRows(
+  range: ReportDateRange,
+  limit = 8,
+) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("cajas")
+    .select(
+      `
+        id,
+        estado,
+        abierta_at,
+        cerrada_at,
+        efectivo_esperado,
+        efectivo_real,
+        diferencia_efectivo,
+        total_ventas,
+        cantidad_ventas,
+        profiles (
+          nombre
+        )
+      `,
+    )
+    .gte("abierta_at", range.fromIso)
+    .lt("abierta_at", range.toIsoExclusive)
+    .order("abierta_at", { ascending: false })
+    .limit(limit)
+    .returns<CashRegisterReportDbRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return [];
+    }
+
+    throw new Error(error.message);
+  }
+
+  return data.map<CashRegisterReportRow>((row) => ({
+    id: row.id,
+    operatorName: row.profiles?.nombre ?? "Mostrador",
+    status: row.estado,
+    openedAt: row.abierta_at,
+    closedAt: row.cerrada_at,
+    expectedCash: toNumber(row.efectivo_esperado),
+    countedCash: row.efectivo_real === null ? null : toNumber(row.efectivo_real),
+    cashDifference:
+      row.diferencia_efectivo === null
+        ? null
+        : toNumber(row.diferencia_efectivo),
+    salesTotal: toNumber(row.total_ventas),
+    salesCount: row.cantidad_ventas,
+  }));
 }
