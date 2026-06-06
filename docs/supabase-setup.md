@@ -141,3 +141,13 @@ supabase/migrations/20260605040000_create_stock_movements.sql
 ```
 
 This creates manual stock movement history and the admin-only `registrar_movimiento_stock` RPC used to record replenishments or stock exits atomically.
+
+## 13. Apply the automatic stock history migration
+
+Run the contents of:
+
+```text
+supabase/migrations/20260605050000_add_automatic_stock_history.sql
+```
+
+This extends stock movement history with origin metadata and updates the POS and wholesale confirmation RPCs so automatic stock exits are visible in `/admin/stock`.

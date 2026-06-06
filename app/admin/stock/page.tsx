@@ -15,6 +15,12 @@ function formatDate(value: string) {
   });
 }
 
+const ORIGIN_LABELS = {
+  manual: "Manual",
+  venta_mostrador: "Mostrador",
+  pedido_mayorista: "Mayorista",
+};
+
 export default async function AdminStockPage() {
   const profile = await requireAdminProfile();
   const [products, movements] = await Promise.all([
@@ -105,6 +111,7 @@ export default async function AdminStockPage() {
                     <th className="px-3 py-3">Fecha</th>
                     <th className="px-3 py-3">Producto</th>
                     <th className="px-3 py-3">Tipo</th>
+                    <th className="px-3 py-3">Origen</th>
                     <th className="px-3 py-3">Cant.</th>
                     <th className="px-3 py-3">Stock</th>
                     <th className="px-3 py-3">Motivo</th>
@@ -136,6 +143,9 @@ export default async function AdminStockPage() {
                         </span>
                       </td>
                       <td className="px-3 py-3 text-zinc-300">
+                        {ORIGIN_LABELS[movement.origen]}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">
                         {movement.cantidad}
                       </td>
                       <td className="px-3 py-3 text-zinc-300">
@@ -149,7 +159,7 @@ export default async function AdminStockPage() {
                   {movements.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-3 py-8 text-center text-zinc-400"
                       >
                         No hay movimientos registrados.

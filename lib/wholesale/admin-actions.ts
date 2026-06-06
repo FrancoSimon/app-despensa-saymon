@@ -50,6 +50,7 @@ export async function manageWholesaleOrderAction(
       revalidatePath("/admin");
       revalidatePath("/admin/pedidos");
       revalidatePath("/admin/productos");
+      revalidatePath("/admin/stock");
 
       return {
         ok: true,

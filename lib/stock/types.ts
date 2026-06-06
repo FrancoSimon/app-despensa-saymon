@@ -1,4 +1,5 @@
 export type StockMovementType = "entrada" | "salida";
+export type StockMovementOrigin = "manual" | "venta_mostrador" | "pedido_mayorista";
 
 export type StockMovementRow = {
   id: string;
@@ -7,6 +8,8 @@ export type StockMovementRow = {
   stock_anterior: number;
   stock_nuevo: number;
   motivo: string | null;
+  origen?: StockMovementOrigin;
+  referencia_id?: string | null;
   created_at: string;
   productos: {
     nombre: string;
@@ -24,6 +27,8 @@ export type StockMovement = {
   stockAnterior: number;
   stockNuevo: number;
   motivo: string | null;
+  origen: StockMovementOrigin;
+  referenciaId: string | null;
   createdAt: string;
   productoNombre: string;
   productoCategoria: string;

@@ -73,6 +73,7 @@ export async function confirmCounterSaleAction(
   revalidatePath("/vendedor");
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
+  revalidatePath("/admin/stock");
 
   return {
     ventaId: data.venta_id,
