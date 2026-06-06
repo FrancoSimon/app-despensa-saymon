@@ -47,6 +47,24 @@ export type AccountMovement = {
   operadorNombre: string;
 };
 
+export type CustomerAccountLedgerMovement = AccountMovement & {
+  saldo: number;
+};
+
+export type CustomerAccountDetail = {
+  clienteId: string;
+  clienteNombre: string;
+  clienteTelefono: string | null;
+  clienteRazonSocial: string | null;
+  clienteDocumento: string | null;
+  saldo: number;
+  totalVentas: number;
+  totalPagos: number;
+  cantidadMovimientos: number;
+  ultimaActividad: string | null;
+  movimientos: CustomerAccountLedgerMovement[];
+};
+
 export type AccountPaymentRpcRow = {
   pago_id: string;
   cliente_id: string;

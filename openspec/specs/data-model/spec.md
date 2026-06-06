@@ -36,9 +36,9 @@ The system SHALL store wholesale orders.
 - **AND** status is one of `pendiente`, `confirmado`, `entregado`, or `rechazado`
 
 ### Requirement: Customer Account Movement Entity
-The system SHALL calculate customer current-account balances from debit and payment movements.
+The system SHALL calculate customer current-account balances from debit and payment movements and expose ledger-ready data.
 
-#### Scenario: Partial payment affects balance
-- **WHEN** a payment movement is lower than the current account balance
-- **THEN** the balance is reduced only by the payment amount
-- **AND** remaining debt stays pending
+#### Scenario: Account ledger is calculated
+- **WHEN** customer account movements are listed chronologically
+- **THEN** each movement can be presented with a running balance after that movement
+- **AND** debit movements increase balance while payment movements reduce balance

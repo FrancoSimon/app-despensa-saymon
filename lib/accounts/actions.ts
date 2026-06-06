@@ -57,6 +57,7 @@ export async function registerAccountPaymentAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/cuentas-corrientes");
+  revalidatePath(`/admin/cuentas-corrientes/${clienteId}`);
   revalidatePath(`/admin/cuentas-corrientes/pagos/${data.pago_id}/ticket`);
 
   redirect(`/admin/cuentas-corrientes/pagos/${data.pago_id}/ticket`);

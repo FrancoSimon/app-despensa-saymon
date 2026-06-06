@@ -3,6 +3,7 @@ import type {
   AccountMovement,
   AccountMovementRow,
   AccountPaymentTicket,
+  CustomerAccountDetail,
   CustomerAccountSummary,
 } from "@/lib/accounts/types";
 
@@ -51,6 +52,10 @@ function mapMovement(row: AccountMovementRow): AccountMovement {
   };
 }
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 export async function listCustomerAccountSummaries() {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -91,7 +96,7 @@ export async function listCustomerAccountSummaries() {
   }
 
   return Array.from(summaries.values())
-    .map((summary) => ({ ...summary, saldo: Math.round(summary.saldo * 100) / 100 }))
+    .map((summary) => ({ ...summary, saldo: roundMoney(summary.saldo) }))
     .sort((a, b) => b.saldo - a.saldo || b.ultimaActividad.localeCompare(a.ultimaActividad));
 }
 
@@ -113,6 +118,64 @@ export async function listRecentAccountMovements(limit = 30) {
   }
 
   return data.map(mapMovement);
+}
+
+export async function getCustomerAccountDetail(clienteId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("cliente_cuenta_movimientos")
+    .select(movementSelect)
+    .eq("cliente_id", clienteId)
+    .order("created_at", { ascending: true })
+    .returns<AccountMovementRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  if (data.length === 0) {
+    return null;
+  }
+
+  let saldo = 0;
+  let totalVentas = 0;
+  let totalPagos = 0;
+  const movimientos = data.map((row) => {
+    const movement = mapMovement(row);
+
+    if (movement.tipo === "venta") {
+      totalVentas += movement.monto;
+      saldo += movement.monto;
+    } else {
+      totalPagos += movement.monto;
+      saldo -= movement.monto;
+    }
+
+    return {
+      ...movement,
+      saldo: roundMoney(saldo),
+    };
+  });
+  const firstRow = data[0];
+  const lastRow = data[data.length - 1];
+
+  return {
+    clienteId,
+    clienteNombre: firstRow.clientes?.nombre ?? "Cliente",
+    clienteTelefono: firstRow.clientes?.telefono ?? null,
+    clienteRazonSocial: firstRow.clientes?.razon_social ?? null,
+    clienteDocumento: firstRow.clientes?.documento_numero ?? null,
+    saldo: roundMoney(saldo),
+    totalVentas: roundMoney(totalVentas),
+    totalPagos: roundMoney(totalPagos),
+    cantidadMovimientos: movimientos.length,
+    ultimaActividad: lastRow.created_at,
+    movimientos: movimientos.reverse(),
+  } satisfies CustomerAccountDetail;
 }
 
 export async function getAccountPaymentTicket(paymentId: string) {
@@ -150,7 +213,7 @@ export async function getAccountPaymentTicket(paymentId: string) {
     (sum, movement) => sum + movementSign(movement.tipo) * toNumber(movement.monto),
     0,
   );
-  const roundedSaldoActual = Math.round(saldoActual * 100) / 100;
+  const roundedSaldoActual = roundMoney(saldoActual);
   const monto = toNumber(data.monto);
 
   return {
@@ -163,7 +226,7 @@ export async function getAccountPaymentTicket(paymentId: string) {
     operadorNombre: data.profiles?.nombre ?? "Administrador",
     monto,
     saldoActual: roundedSaldoActual,
-    saldoAntes: Math.round((roundedSaldoActual + monto) * 100) / 100,
+    saldoAntes: roundMoney(roundedSaldoActual + monto),
     formaPago: data.forma_pago,
     nota: data.nota,
     createdAt: data.created_at,

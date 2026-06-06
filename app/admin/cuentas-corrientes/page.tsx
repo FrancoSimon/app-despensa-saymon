@@ -154,6 +154,12 @@ export default async function AdminCurrentAccountsPage({
                       <p className="mt-1 text-xs text-zinc-600">
                         Ultima actividad: {formatDate(account.ultimaActividad)}
                       </p>
+                      <Link
+                        href={`/admin/cuentas-corrientes/${account.clienteId}`}
+                        className="mt-3 inline-block rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-lime-300 transition hover:border-lime-300"
+                      >
+                        Ver detalle
+                      </Link>
                     </div>
                     <div className="rounded-md border border-white/10 bg-black p-3 text-left lg:text-right">
                       <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">

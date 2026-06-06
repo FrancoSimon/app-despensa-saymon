@@ -54,18 +54,18 @@ The system SHALL expose an admin file upload endpoint.
 - **THEN** the system uploads the file and returns a public URL
 
 ### Requirement: Customer Account Admin Surface
-The app SHALL expose an admin current-account page with safe payment controls and customer search.
+The app SHALL expose admin current-account list and detail pages for balance management and audit.
 
-#### Scenario: Admin searches current-account customers
-- **WHEN** an admin enters a customer search term
-- **THEN** the current-account page filters customer account cards by name, phone, business name, or document
+#### Scenario: Admin opens customer account detail
+- **WHEN** an admin opens `/admin/cuentas-corrientes/:clienteId`
+- **THEN** the app shows customer identity, current balance, debit total, payment total, and movement count
+- **AND** the app shows all account movements in chronological order with running balance
 
-#### Scenario: Admin registers partial payment
-- **WHEN** an admin records a payment lower than the customer balance
-- **THEN** the receipt identifies the operation as a partial payment
-- **AND** the customer remains with pending balance
+#### Scenario: Admin audits related receipts
+- **WHEN** a movement has a related sale or payment receipt
+- **THEN** the detail page links to the corresponding sale ticket or payment receipt
 
-#### Scenario: Admin records full debt cancellation
-- **WHEN** an admin records a payment equal to the customer balance
-- **THEN** the receipt identifies the operation as a full cancellation
-- **AND** the customer balance is zero
+#### Scenario: Admin records payment from detail
+- **WHEN** an admin registers a payment from the customer account detail
+- **THEN** the payment reduces only the customer account balance by the payment amount
+- **AND** the payment receipt remains printable

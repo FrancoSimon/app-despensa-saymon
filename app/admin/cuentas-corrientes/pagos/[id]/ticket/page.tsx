@@ -71,7 +71,7 @@ export default async function AccountPaymentTicketPage({
       `}</style>
       <div className="mx-auto mb-5 flex max-w-[80mm] flex-wrap items-center justify-between gap-3 text-white print:hidden">
         <Link
-          href="/admin/cuentas-corrientes"
+          href={`/admin/cuentas-corrientes/${ticket.clienteId}`}
           className="rounded-md border border-white/15 px-4 py-3 text-sm font-bold transition hover:border-lime-300"
         >
           Volver
