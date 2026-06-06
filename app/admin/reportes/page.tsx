@@ -252,12 +252,12 @@ export default async function AdminReportsPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-black text-white">Ventas por dia</h2>
             <CsvExportButton
-              columns={[
-                { header: "Dia", value: (row) => dateLabel(row.date) },
-                { header: "Ventas", value: (row) => row.count },
-                { header: "Total", value: (row) => row.total },
-              ]}
-              rows={dailySales}
+              headers={["Dia", "Ventas", "Total"]}
+              rows={dailySales.map((row) => [
+                dateLabel(row.date),
+                row.count,
+                row.total,
+              ])}
               fileName={`ventas-por-dia-${range.from}-${range.to}.csv`}
             />
           </div>
@@ -298,12 +298,12 @@ export default async function AdminReportsPage({
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xl font-black text-white">Mas vendidos</h2>
             <CsvExportButton
-              columns={[
-                { header: "Producto", value: (row) => row.productName },
-                { header: "Cantidad", value: (row) => row.quantity },
-                { header: "Total", value: (row) => row.total },
-              ]}
-              rows={bestSellers}
+              headers={["Producto", "Cantidad", "Total"]}
+              rows={bestSellers.map((row) => [
+                row.productName,
+                row.quantity,
+                row.total,
+              ])}
               fileName={`mas-vendidos-${range.from}-${range.to}.csv`}
             />
           </div>
@@ -346,19 +346,30 @@ export default async function AdminReportsPage({
           <h2 className="text-xl font-black text-white">Cajas del periodo</h2>
           <div className="flex items-center gap-2">
             <CsvExportButton
-              columns={[
-                { header: "Caja", value: (row) => row.id },
-                { header: "Operador", value: (row) => row.operatorName },
-                { header: "Estado", value: (row) => row.status },
-                { header: "Apertura", value: (row) => dateTimeLabel(row.openedAt) },
-                { header: "Cierre", value: (row) => dateTimeLabel(row.closedAt) },
-                { header: "Cantidad ventas", value: (row) => row.salesCount },
-                { header: "Total ventas", value: (row) => row.salesTotal },
-                { header: "Efectivo esperado", value: (row) => row.expectedCash },
-                { header: "Efectivo contado", value: (row) => row.countedCash },
-                { header: "Diferencia", value: (row) => row.cashDifference },
+              headers={[
+                "Caja",
+                "Operador",
+                "Estado",
+                "Apertura",
+                "Cierre",
+                "Cantidad ventas",
+                "Total ventas",
+                "Efectivo esperado",
+                "Efectivo contado",
+                "Diferencia",
               ]}
-              rows={cashRegisterRows}
+              rows={cashRegisterRows.map((row) => [
+                row.id,
+                row.operatorName,
+                row.status,
+                dateTimeLabel(row.openedAt),
+                dateTimeLabel(row.closedAt),
+                row.salesCount,
+                row.salesTotal,
+                row.expectedCash,
+                row.countedCash,
+                row.cashDifference,
+              ])}
               fileName={`cajas-${range.from}-${range.to}.csv`}
             />
             <Link
@@ -459,13 +470,13 @@ export default async function AdminReportsPage({
               Productos con stock bajo
             </h2>
             <CsvExportButton
-              columns={[
-                { header: "Producto", value: (row) => row.nombre },
-                { header: "Categoria", value: (row) => row.categoria },
-                { header: "Stock", value: (row) => row.stock },
-                { header: "Stock minimo", value: (row) => row.stockMinimo },
-              ]}
-              rows={lowStockProducts}
+              headers={["Producto", "Categoria", "Stock", "Stock minimo"]}
+              rows={lowStockProducts.map((row) => [
+                row.nombre,
+                row.categoria,
+                row.stock,
+                row.stockMinimo,
+              ])}
               fileName={`stock-bajo-${range.from}-${range.to}.csv`}
             />
           </div>

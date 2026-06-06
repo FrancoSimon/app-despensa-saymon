@@ -2,14 +2,9 @@
 
 type CsvValue = string | number | null | undefined;
 
-type CsvColumn<T> = {
-  header: string;
-  value: (row: T) => CsvValue;
-};
-
-type CsvExportButtonProps<T> = {
-  columns: CsvColumn<T>[];
-  rows: T[];
+type CsvExportButtonProps = {
+  headers: string[];
+  rows: CsvValue[][];
   fileName: string;
 };
 
@@ -23,15 +18,15 @@ function escapeCsv(value: CsvValue) {
   return text;
 }
 
-export function CsvExportButton<T>({
-  columns,
+export function CsvExportButton({
+  headers,
   rows,
   fileName,
-}: CsvExportButtonProps<T>) {
+}: CsvExportButtonProps) {
   function downloadCsv() {
     const csv = [
-      columns.map((column) => column.header),
-      ...rows.map((row) => columns.map((column) => column.value(row))),
+      headers,
+      ...rows,
     ]
       .map((line) => line.map(escapeCsv).join(","))
       .join("\n");
