@@ -120,7 +120,9 @@ function buildWhatsAppMessage(ticket: SaleTicket) {
 function getBackHref(value: string | undefined, role: string) {
   if (
     role === "admin" &&
-    (value?.startsWith("/admin/ventas") || value?.startsWith("/admin/cajas/"))
+    (value?.startsWith("/admin/ventas") ||
+      value?.startsWith("/admin/cajas/") ||
+      value?.startsWith("/admin/cuentas-corrientes"))
   ) {
     return value;
   }
