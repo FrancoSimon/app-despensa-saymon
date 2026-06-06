@@ -149,7 +149,7 @@ export default async function AdminReportsPage({
           </p>
         </article>
         <Link
-          href="/admin/ventas?estado=anulada"
+          href={`/admin/ventas?estado=anulada&desde=${range.from}&hasta=${range.to}`}
           className="rounded-lg border border-white/10 bg-black p-5 transition hover:border-lime-300"
         >
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">

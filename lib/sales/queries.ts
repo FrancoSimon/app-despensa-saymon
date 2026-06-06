@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { ReportDateRange } from "@/lib/reports/types";
 import type {
   AdminSale,
   AdminSaleRow,
@@ -69,6 +70,7 @@ function isMissingSaleStatus(errorCode?: string) {
 
 export async function listAdminSales(
   status: AdminSaleStatusFilter = "todas",
+  range?: ReportDateRange,
   limit = 80,
 ) {
   const supabase = await createClient();
@@ -95,6 +97,10 @@ export async function listAdminSales(
     query = query.eq("estado", status);
   }
 
+  if (range) {
+    query = query.gte("fecha", range.fromIso).lt("fecha", range.toIsoExclusive);
+  }
+
   const { data, error } = await query.returns<AdminSaleRow[]>();
 
   if (error) {
@@ -103,7 +109,7 @@ export async function listAdminSales(
     }
 
     if (isMissingSaleStatus(error.code)) {
-      const { data: fallbackData, error: fallbackError } = await supabase
+      let fallbackQuery = supabase
         .from("ventas")
         .select(
           `
@@ -117,8 +123,16 @@ export async function listAdminSales(
           `,
         )
         .order("fecha", { ascending: false })
-        .limit(limit)
-        .returns<AdminSaleRow[]>();
+        .limit(limit);
+
+      if (range) {
+        fallbackQuery = fallbackQuery
+          .gte("fecha", range.fromIso)
+          .lt("fecha", range.toIsoExclusive);
+      }
+
+      const { data: fallbackData, error: fallbackError } =
+        await fallbackQuery.returns<AdminSaleRow[]>();
 
       if (fallbackError) {
         throw new Error(fallbackError.message);

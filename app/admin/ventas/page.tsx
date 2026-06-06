@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { createReportDateRange } from "@/lib/reports/dates";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import {
   isAdminSaleStatusFilter,
@@ -9,7 +10,7 @@ import {
 import type { AdminSaleStatusFilter, SaleStatus } from "@/lib/sales/types";
 
 type AdminSalesPageProps = {
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; desde?: string; hasta?: string }>;
 };
 
 const statusOptions: { value: AdminSaleStatusFilter; label: string }[] = [
@@ -45,11 +46,20 @@ export default async function AdminSalesPage({
   searchParams,
 }: AdminSalesPageProps) {
   const profile = await requireAdminProfile();
-  const { estado } = await searchParams;
+  const { estado, desde, hasta } = await searchParams;
   const status = isAdminSaleStatusFilter(estado) ? estado : "todas";
-  const sales = await listAdminSales(status);
-  const returnHref =
-    status === "todas" ? "/admin/ventas" : `/admin/ventas?estado=${status}`;
+  const range = createReportDateRange(desde, hasta);
+  const sales = await listAdminSales(status, range);
+  const query = new URLSearchParams({
+    desde: range.from,
+    hasta: range.to,
+  });
+
+  if (status !== "todas") {
+    query.set("estado", status);
+  }
+
+  const returnHref = `/admin/ventas?${query.toString()}`;
 
   return (
     <AppShell profile={profile} title="Ventas mostrador">
@@ -62,25 +72,61 @@ export default async function AdminSalesPage({
         </Link>
       </div>
 
-      <nav className="mb-5 flex flex-wrap gap-2">
-        {statusOptions.map((option) => (
-          <Link
-            key={option.value}
-            href={
-              option.value === "todas"
-                ? "/admin/ventas"
-                : `/admin/ventas?estado=${option.value}`
+      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <nav className="flex flex-wrap gap-2">
+          {statusOptions.map((option) => {
+            const optionQuery = new URLSearchParams({
+              desde: range.from,
+              hasta: range.to,
+            });
+
+            if (option.value !== "todas") {
+              optionQuery.set("estado", option.value);
             }
-            className={
-              status === option.value
-                ? "rounded-md bg-lime-300 px-3 py-2 text-sm font-black text-black"
-                : "rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
-            }
-          >
-            {option.label}
-          </Link>
-        ))}
-      </nav>
+
+            return (
+              <Link
+                key={option.value}
+                href={`/admin/ventas?${optionQuery.toString()}`}
+                className={
+                  status === option.value
+                    ? "rounded-md bg-lime-300 px-3 py-2 text-sm font-black text-black"
+                    : "rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+                }
+              >
+                {option.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <form className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          {status !== "todas" ? (
+            <input type="hidden" name="estado" value={status} />
+          ) : null}
+          <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Desde
+            <input
+              name="desde"
+              type="date"
+              defaultValue={range.from}
+              className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition focus:border-lime-300"
+            />
+          </label>
+          <label className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+            Hasta
+            <input
+              name="hasta"
+              type="date"
+              defaultValue={range.to}
+              className="mt-2 h-11 w-full rounded-md border border-white/10 bg-black px-3 text-sm text-white outline-none transition focus:border-lime-300"
+            />
+          </label>
+          <button className="h-11 self-end rounded-md bg-lime-300 px-4 text-sm font-black text-black transition hover:bg-lime-200">
+            Aplicar
+          </button>
+        </form>
+      </div>
 
       <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
         <div className="overflow-x-auto">
