@@ -59,3 +59,121 @@ The app SHALL preserve admin navigation when opening related receipts from curre
 #### Scenario: Admin returns from account sale ticket
 - **WHEN** an admin opens a sale ticket from a customer current-account detail
 - **THEN** the ticket page "Volver" link returns to the customer current-account detail
+
+### Requirement: Admin Record Pagination
+Admin record list pages SHALL paginate results and preserve active filters.
+
+#### Scenario: Admin navigates paginated records
+- **WHEN** an admin opens a record list page with many records
+- **THEN** the app shows only the selected page of records
+- **AND** provides previous and next page links when available
+
+#### Scenario: Pagination preserves filters
+- **WHEN** an admin changes page while filters are active
+- **THEN** the app keeps the existing filters in the pagination links
+
+### Requirement: Compact Product Browsing
+Product sale surfaces SHALL avoid rendering the full product catalog by default.
+
+#### Scenario: Counter opens with compact catalog
+- **WHEN** a seller opens the counter panel without a product search
+- **THEN** the app shows a limited set of active products and keeps search/scanner available
+
+#### Scenario: Wholesale portal opens with compact catalog
+- **WHEN** a wholesaler opens the portal without a product search or category filter
+- **THEN** the app shows a limited set of wholesale products and keeps search/category filtering available
+
+### Requirement: Compact Cart Lists
+Cart item lists SHALL stay visually compact as the number of selected products grows.
+
+#### Scenario: Counter cart grows
+- **WHEN** a seller adds many products to the cart
+- **THEN** the cart item area scrolls within a constrained height
+
+#### Scenario: Wholesale cart grows
+- **WHEN** a wholesaler adds many products to a new order
+- **THEN** the cart item area scrolls within a constrained height
+
+### Requirement: Product Category Suggestions
+The admin product form SHALL suggest common categories while allowing custom category values.
+
+#### Scenario: Admin enters product category
+- **WHEN** an admin creates or edits a product
+- **THEN** the category field offers predefined options and also accepts custom text
+
+### Requirement: Compact Wholesale Order History
+The wholesale portal SHALL keep the previous order list compact on small screens.
+
+#### Scenario: Wholesaler views previous orders
+- **WHEN** a wholesaler opens the portal with previous orders
+- **THEN** the app shows only the two newest orders in the first view
+- **AND** provides controls to navigate older orders when available
+
+### Requirement: Single Entry Home Screen
+The public home screen SHALL present one login entry and avoid exposing role-specific module shortcuts.
+
+#### Scenario: Visitor opens home
+- **WHEN** a visitor opens the home screen
+- **THEN** the app shows a commerce welcome message
+- **AND** provides a single login call to action
+- **AND** does not show separate module labels under the logo
+
+### Requirement: Motivational Login Copy
+The login screen SHALL greet users with a motivational message instead of listing role modules.
+
+#### Scenario: User opens login
+- **WHEN** a user opens the login screen
+- **THEN** the app shows a motivational welcome message for starting the work session
+
+### Requirement: Fast POS Search
+The POS SHALL support fast product selection by search, barcode, and keyboard.
+
+#### Scenario: Seller searches products
+- **WHEN** a seller types in the product search
+- **THEN** matching products are prioritized by exact barcode, name prefix, name match, category, and barcode match
+
+#### Scenario: Seller uses keyboard product entry
+- **WHEN** the product search is focused and the seller presses Enter
+- **THEN** the first visible product is added to the cart when available
+
+### Requirement: POS Keyboard Shortcuts
+The POS SHALL provide keyboard shortcuts for frequent counter actions.
+
+#### Scenario: Seller uses shortcuts
+- **WHEN** a seller is on the POS screen
+- **THEN** the app supports shortcuts for focusing search, selecting payment method, clearing the cart, and confirming the sale
+
+### Requirement: POS Confirmation And Safety
+The POS SHALL clearly confirm the sale before submitting and keep server-side permission checks enforced.
+
+#### Scenario: Seller confirms sale
+- **WHEN** a seller attempts to confirm a sale
+- **THEN** the app shows a summary of the sale before submitting
+
+#### Scenario: Sale is blocked
+- **WHEN** the cash register is closed or account-current sale has no customer
+- **THEN** the app blocks confirmation and explains the required action
+
+### Requirement: POS Cash Change Helper
+The POS SHALL calculate change for cash payments during sale confirmation.
+
+#### Scenario: Seller confirms cash sale
+- **WHEN** a seller confirms a counter sale with cash payment
+- **THEN** the app asks for the amount received
+- **AND** shows the exact change to give
+- **AND** prevents confirming when the received amount is less than the sale total
+
+### Requirement: Wholesale Ordering UX
+The wholesale portal SHALL provide fast product selection, keyboard shortcuts, and clear order confirmation.
+
+#### Scenario: Wholesaler searches products
+- **WHEN** a wholesaler types in product search
+- **THEN** matching products are prioritized by exact barcode, name prefix, name match, category, and barcode match
+
+#### Scenario: Wholesaler confirms order
+- **WHEN** a wholesaler attempts to send an order
+- **THEN** the app shows a summary before submitting the order
+
+#### Scenario: Wholesaler uses shortcuts
+- **WHEN** a wholesaler is on the ordering screen
+- **THEN** the app supports shortcuts for focusing search, focusing category, clearing the cart, and confirming the order

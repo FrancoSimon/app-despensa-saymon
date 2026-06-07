@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type { ReportDateRange } from "@/lib/reports/types";
 import type {
   AdminSale,
@@ -81,9 +87,10 @@ function isMissingSaleStatus(errorCode?: string) {
 export async function listAdminSales(
   status: AdminSaleStatusFilter = "todas",
   range?: ReportDateRange,
-  limit = 80,
+  paginationInput: PaginationInput = {},
 ) {
   const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
   let query = supabase
     .from("ventas")
     .select(
@@ -100,9 +107,10 @@ export async function listAdminSales(
           nombre
         )
       `,
+      { count: "exact" },
     )
     .order("fecha", { ascending: false })
-    .limit(limit);
+    .range(pagination.from, pagination.to);
 
   if (status !== "todas") {
     query = query.eq("estado", status);
@@ -112,11 +120,11 @@ export async function listAdminSales(
     query = query.gte("fecha", range.fromIso).lt("fecha", range.toIsoExclusive);
   }
 
-  const { data, error } = await query.returns<AdminSaleRow[]>();
+  const { data, error, count } = await query.returns<AdminSaleRow[]>();
 
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
-      return [];
+      return emptyPaginatedResult<AdminSale>(pagination.page, pagination.pageSize);
     }
 
     if (isMissingSaleStatus(error.code)) {
@@ -133,9 +141,10 @@ export async function listAdminSales(
               nombre
             )
           `,
+          { count: "exact" },
         )
         .order("fecha", { ascending: false })
-        .limit(limit);
+        .range(pagination.from, pagination.to);
 
       if (range) {
         fallbackQuery = fallbackQuery
@@ -143,7 +152,7 @@ export async function listAdminSales(
           .lt("fecha", range.toIsoExclusive);
       }
 
-      const { data: fallbackData, error: fallbackError } =
+      const { data: fallbackData, error: fallbackError, count: fallbackCount } =
         await fallbackQuery.returns<AdminSaleRow[]>();
 
       if (fallbackError) {
@@ -151,18 +160,31 @@ export async function listAdminSales(
       }
 
       if (status === "anulada") {
-        return [];
+        return emptyPaginatedResult<AdminSale>(
+          pagination.page,
+          pagination.pageSize,
+        );
       }
 
-      return fallbackData.map((row) =>
-        mapAdminSale({ ...row, estado: "activa" as SaleStatus }),
-      );
+      return createPaginatedResult({
+        items: fallbackData.map((row) =>
+          mapAdminSale({ ...row, estado: "activa" as SaleStatus }),
+        ),
+        total: fallbackCount,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      });
     }
 
     throw new Error(error.message);
   }
 
-  return data.map(mapAdminSale);
+  return createPaginatedResult({
+    items: data.map(mapAdminSale),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export async function getSaleTicket(id: string) {

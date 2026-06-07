@@ -1,5 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/lib/auth/types";
+import {
+  createPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type { AdminUser } from "@/lib/users/types";
 
 function mapProfile(row: ProfileRow): AdminUser {
@@ -41,6 +46,32 @@ export async function listAdminUsers() {
   }
 
   return data.map(mapProfile);
+}
+
+export async function listAdminUsersPaginated(
+  paginationInput: PaginationInput = {},
+) {
+  const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
+  const { data, error, count } = await supabase
+    .from("profiles")
+    .select(profileSelect, { count: "exact" })
+    .order("activo", { ascending: false })
+    .order("rol", { ascending: true })
+    .order("nombre", { ascending: true })
+    .range(pagination.from, pagination.to)
+    .returns<ProfileRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return createPaginatedResult<AdminUser>({
+    items: data.map(mapProfile),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export async function getAdminUser(id: string) {

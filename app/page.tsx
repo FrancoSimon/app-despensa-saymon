@@ -49,14 +49,14 @@ export default async function Home() {
         <div className="grid flex-1 items-center gap-12 py-16 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="max-w-3xl">
             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-lime-300">
-              POS + mayoristas
+              Bienvenido
             </p>
             <h1 className="text-5xl font-black leading-tight text-white sm:text-7xl">
-              La columna vertebral digital de SAYMON.
+              Comercio SAYMON, cerca de cada cliente.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300">
-              Sistema para ventas de mostrador, stock, doble precio y pedidos
-              mayoristas con entrega organizada.
+              Un espacio preparado para trabajar con orden, atender mejor y
+              acompañar el movimiento diario del comercio.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -64,12 +64,6 @@ export default async function Home() {
                 className="rounded-full bg-lime-300 px-6 py-3 text-center font-bold text-black transition hover:bg-lime-200"
               >
                 Iniciar sesion
-              </Link>
-              <Link
-                href="/mayorista"
-                className="rounded-full border border-white/20 px-6 py-3 text-center font-bold text-white transition hover:border-lime-300 hover:text-lime-200"
-              >
-                Portal mayorista
               </Link>
             </div>
           </div>
@@ -83,13 +77,6 @@ export default async function Home() {
               className="aspect-square w-full rounded-md object-cover"
               priority
             />
-            <div className="mt-6 grid grid-cols-3 gap-3 text-center text-sm text-zinc-300">
-              <div className="rounded-md border border-white/10 p-3">
-                Stock
-              </div>
-              <div className="rounded-md border border-white/10 p-3">POS</div>
-              <div className="rounded-md border border-white/10 p-3">B2B</div>
-            </div>
           </div>
         </div>
       </section>

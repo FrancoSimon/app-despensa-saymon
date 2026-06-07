@@ -1,6 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import { mapProduct } from "@/lib/products/mapper";
-import type { ProductRow } from "@/lib/products/types";
+import type { Product, ProductRow } from "@/lib/products/types";
 
 const productSelectBase = `
   id,
@@ -76,6 +82,76 @@ export async function listAdminProducts(search?: string) {
   }
 
   return data.map(mapProduct);
+}
+
+export async function listAdminProductsPaginated(
+  search?: string,
+  paginationInput: PaginationInput = {},
+) {
+  const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
+  const buildQuery = (select: string) =>
+    supabase
+      .from("productos")
+      .select(select, { count: "exact" })
+      .order("activo", { ascending: false })
+      .order("nombre", { ascending: true })
+      .range(pagination.from, pagination.to);
+
+  let query = buildQuery(productSelect);
+  const term = search?.trim();
+
+  if (term) {
+    const escaped = term.replaceAll("%", "\\%").replaceAll("_", "\\_");
+    query = query.or(
+      `nombre.ilike.%${escaped}%,categoria.ilike.%${escaped}%,codigo_barras.ilike.%${escaped}%`,
+    );
+  }
+
+  const { data, error, count } = await query.returns<ProductRow[]>();
+
+  if (error) {
+    if (isMissingCostColumn(error.code)) {
+      let fallbackQuery = buildQuery(productSelectBase);
+
+      if (term) {
+        const escaped = term.replaceAll("%", "\\%").replaceAll("_", "\\_");
+        fallbackQuery = fallbackQuery.or(
+          `nombre.ilike.%${escaped}%,categoria.ilike.%${escaped}%,codigo_barras.ilike.%${escaped}%`,
+        );
+      }
+
+      const {
+        data: fallbackData,
+        error: fallbackError,
+        count: fallbackCount,
+      } = await fallbackQuery.returns<ProductRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      return createPaginatedResult<Product>({
+        items: fallbackData.map(mapProduct),
+        total: fallbackCount,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      });
+    }
+
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return emptyPaginatedResult<Product>(pagination.page, pagination.pageSize);
+    }
+
+    throw new Error(error.message);
+  }
+
+  return createPaginatedResult<Product>({
+    items: data.map(mapProduct),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export async function getAdminProduct(id: string) {

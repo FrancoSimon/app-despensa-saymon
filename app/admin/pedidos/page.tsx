@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { AdminPendingOrders } from "@/components/wholesale/admin-pending-orders";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { parsePage } from "@/lib/pagination";
 import { getWholesaleDeliveryOptions } from "@/lib/wholesale/dates";
 import {
   isAdminWholesaleOrderStatusFilter,
@@ -9,7 +11,7 @@ import {
 } from "@/lib/wholesale/queries";
 
 type AdminWholesaleOrdersPageProps = {
-  searchParams: Promise<{ estado?: string; volver?: string }>;
+  searchParams: Promise<{ estado?: string; pagina?: string; volver?: string }>;
 };
 
 function getBackHref(value: string | undefined) {
@@ -24,10 +26,21 @@ export default async function AdminWholesaleOrdersPage({
   searchParams,
 }: AdminWholesaleOrdersPageProps) {
   const profile = await requireAdminProfile();
-  const { estado, volver } = await searchParams;
+  const { estado, pagina, volver } = await searchParams;
   const status = isAdminWholesaleOrderStatusFilter(estado) ? estado : "pendiente";
   const backHref = getBackHref(volver);
-  const orders = await listWholesaleOrdersForAdmin(status);
+  const page = parsePage(pagina);
+  const paginationQuery = new URLSearchParams();
+
+  if (status !== "pendiente") {
+    paginationQuery.set("estado", status);
+  }
+
+  if (backHref !== "/admin") {
+    paginationQuery.set("volver", backHref);
+  }
+
+  const orders = await listWholesaleOrdersForAdmin(status, { page });
 
   return (
     <AppShell profile={profile} title="Pedidos mayoristas">
@@ -42,10 +55,15 @@ export default async function AdminWholesaleOrdersPage({
         </Link>
       </div>
       <AdminPendingOrders
-        orders={orders}
+        orders={orders.items}
         selectedStatus={status}
         deliveryOptions={getWholesaleDeliveryOptions(10)}
         returnHref={backHref === "/admin" ? null : backHref}
+      />
+      <PaginationControls
+        pagination={orders}
+        basePath="/admin/pedidos"
+        query={paginationQuery}
       />
     </AppShell>
   );

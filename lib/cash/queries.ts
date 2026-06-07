@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type {
   CashRegister,
   CashRegisterFilters,
@@ -327,8 +333,12 @@ export async function listCashRegisterOperators() {
   }));
 }
 
-export async function listCashRegisters(filters: CashRegisterFilters, limit = 100) {
+export async function listCashRegisters(
+  filters: CashRegisterFilters,
+  paginationInput: PaginationInput = {},
+) {
   const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
   let query = supabase
     .from("cajas")
     .select(
@@ -355,11 +365,12 @@ export async function listCashRegisters(filters: CashRegisterFilters, limit = 10
           email
         )
       `,
+      { count: "exact" },
     )
     .gte("abierta_at", filters.fromIso)
     .lt("abierta_at", filters.toIsoExclusive)
     .order("abierta_at", { ascending: false })
-    .limit(limit);
+    .range(pagination.from, pagination.to);
 
   if (filters.status !== "todas") {
     query = query.eq("estado", filters.status);
@@ -369,17 +380,25 @@ export async function listCashRegisters(filters: CashRegisterFilters, limit = 10
     query = query.eq("perfil_id", filters.operatorId);
   }
 
-  const { data, error } = await query.returns<CashRegisterRow[]>();
+  const { data, error, count } = await query.returns<CashRegisterRow[]>();
 
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
-      return [];
+      return emptyPaginatedResult<CashRegister>(
+        pagination.page,
+        pagination.pageSize,
+      );
     }
 
     throw new Error(error.message);
   }
 
-  return data.map(mapCashRegister);
+  return createPaginatedResult<CashRegister>({
+    items: data.map(mapCashRegister),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export async function getCashRegisterById(id: string) {

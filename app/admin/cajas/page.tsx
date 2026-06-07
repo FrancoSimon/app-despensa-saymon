@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import {
   listCashRegisterOperators,
   listCashRegisters,
 } from "@/lib/cash/queries";
+import { parsePage } from "@/lib/pagination";
 import { createReportDateRange } from "@/lib/reports/dates";
 import type { CashRegisterStatusFilter } from "@/lib/cash/types";
 
@@ -14,6 +16,7 @@ type AdminCashRegistersPageProps = {
     estado?: string;
     hasta?: string;
     operador?: string;
+    pagina?: string;
     volver?: string;
   }>;
 };
@@ -66,11 +69,12 @@ export default async function AdminCashRegistersPage({
   searchParams,
 }: AdminCashRegistersPageProps) {
   const profile = await requireAdminProfile();
-  const { desde, estado, hasta, operador, volver } = await searchParams;
+  const { desde, estado, hasta, operador, pagina, volver } = await searchParams;
   const backHref = getBackHref(volver);
   const range = createReportDateRange(desde, hasta);
   const status = getStatusFilter(estado);
   const operatorId = operador || null;
+  const page = parsePage(pagina);
   const listQuery = new URLSearchParams({
     desde: range.from,
     hasta: range.to,
@@ -88,6 +92,10 @@ export default async function AdminCashRegistersPage({
     listQuery.set("volver", backHref);
   }
 
+  if (page > 1) {
+    listQuery.set("pagina", String(page));
+  }
+
   const detailReturnHref = `/admin/cajas?${listQuery.toString()}`;
   const [cashRegisters, operators] = await Promise.all([
     listCashRegisters({
@@ -95,7 +103,7 @@ export default async function AdminCashRegistersPage({
       toIsoExclusive: range.toIsoExclusive,
       status,
       operatorId,
-    }),
+    }, { page }),
     listCashRegisterOperators(),
   ]);
 
@@ -186,7 +194,7 @@ export default async function AdminCashRegistersPage({
               </tr>
             </thead>
             <tbody>
-              {cashRegisters.map((cashRegister) => (
+              {cashRegisters.items.map((cashRegister) => (
                 <tr key={cashRegister.id} className="border-t border-white/10">
                   <td className="px-4 py-4">
                     <p className="font-semibold text-white">
@@ -249,7 +257,7 @@ export default async function AdminCashRegistersPage({
                   </td>
                 </tr>
               ))}
-              {cashRegisters.length === 0 ? (
+              {cashRegisters.items.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-4 py-10 text-center text-zinc-400">
                     No hay cajas para mostrar.
@@ -260,6 +268,11 @@ export default async function AdminCashRegistersPage({
           </table>
         </div>
       </div>
+      <PaginationControls
+        pagination={cashRegisters}
+        basePath="/admin/cajas"
+        query={listQuery}
+      />
     </AppShell>
   );
 }

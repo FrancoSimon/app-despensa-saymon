@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type {
   AccountMovement,
   AccountMovementRow,
@@ -118,6 +124,37 @@ export async function listRecentAccountMovements(limit = 30) {
   }
 
   return data.map(mapMovement);
+}
+
+export async function listAccountMovementsPaginated(
+  paginationInput: PaginationInput = {},
+) {
+  const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
+  const { data, error, count } = await supabase
+    .from("cliente_cuenta_movimientos")
+    .select(movementSelect, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to)
+    .returns<AccountMovementRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return emptyPaginatedResult<AccountMovement>(
+        pagination.page,
+        pagination.pageSize,
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  return createPaginatedResult<AccountMovement>({
+    items: data.map(mapMovement),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export async function getCustomerAccountDetail(clienteId: string) {

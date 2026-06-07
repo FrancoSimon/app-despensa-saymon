@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { deactivateProductAction } from "@/lib/products/actions";
-import { listAdminProducts } from "@/lib/products/queries";
+import { listAdminProductsPaginated } from "@/lib/products/queries";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { parsePage } from "@/lib/pagination";
 
 type ProductsPageProps = {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; pagina?: string }>;
 };
 
 function money(value: number) {
@@ -20,8 +22,15 @@ export default async function AdminProductsPage({
   searchParams,
 }: ProductsPageProps) {
   const profile = await requireAdminProfile();
-  const { q } = await searchParams;
-  const products = await listAdminProducts(q);
+  const { q, pagina } = await searchParams;
+  const products = await listAdminProductsPaginated(q, {
+    page: parsePage(pagina),
+  });
+  const paginationQuery = new URLSearchParams();
+
+  if (q) {
+    paginationQuery.set("q", q);
+  }
 
   return (
     <AppShell profile={profile} title="Productos">
@@ -70,7 +79,7 @@ export default async function AdminProductsPage({
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => {
+              {products.items.map((product) => {
                 const lowStock = product.stock < product.stockMinimo;
 
                 return (
@@ -138,7 +147,7 @@ export default async function AdminProductsPage({
                   </tr>
                 );
               })}
-              {products.length === 0 ? (
+              {products.items.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-zinc-400">
                     No hay productos para mostrar.
@@ -149,6 +158,11 @@ export default async function AdminProductsPage({
           </table>
         </div>
       </div>
+      <PaginationControls
+        pagination={products}
+        basePath="/admin/productos"
+        query={paginationQuery}
+      />
     </AppShell>
   );
 }

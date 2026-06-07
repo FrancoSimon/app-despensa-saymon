@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { registerAccountPaymentAction } from "@/lib/accounts/actions";
 import { getCustomerAccountDetail } from "@/lib/accounts/queries";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import {
+  createPaginatedResult,
+  DEFAULT_PAGE_SIZE,
+  parsePage,
+} from "@/lib/pagination";
 import { paymentMethodLabels, paymentMethodOptions } from "@/lib/sales/payment-methods";
 
 type CustomerAccountDetailPageProps = {
   params: Promise<{
     clienteId: string;
+  }>;
+  searchParams: Promise<{
+    pagina?: string;
   }>;
 };
 
@@ -36,9 +45,11 @@ function formatDate(value: string) {
 
 export default async function CustomerAccountDetailPage({
   params,
+  searchParams,
 }: CustomerAccountDetailPageProps) {
   const profile = await requireAdminProfile();
   const { clienteId } = await params;
+  const { pagina } = await searchParams;
   const account = await getCustomerAccountDetail(clienteId);
 
   if (!account) {
@@ -46,6 +57,18 @@ export default async function CustomerAccountDetailPage({
   }
 
   const hasDebt = account.saldo > 0;
+  const page = parsePage(pagina);
+  const from = (page - 1) * DEFAULT_PAGE_SIZE;
+  const paginatedMovements = createPaginatedResult({
+    items: account.movimientos.slice(from, from + DEFAULT_PAGE_SIZE),
+    total: account.movimientos.length,
+    page,
+    pageSize: DEFAULT_PAGE_SIZE,
+  });
+  const detailHref =
+    page > 1
+      ? `/admin/cuentas-corrientes/${account.clienteId}?pagina=${page}`
+      : `/admin/cuentas-corrientes/${account.clienteId}`;
 
   return (
     <AppShell profile={profile} title="Detalle cuenta corriente">
@@ -189,7 +212,7 @@ export default async function CustomerAccountDetailPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {account.movimientos.map((movement) => (
+                  {paginatedMovements.items.map((movement) => (
                     <tr key={movement.id} className="border-t border-white/10">
                       <td className="px-3 py-3 text-zinc-400">
                         {formatDate(movement.createdAt)}
@@ -226,7 +249,7 @@ export default async function CustomerAccountDetailPage({
                       <td className="px-3 py-3">
                         {movement.ventaId ? (
                           <Link
-                            href={`/vendedor/ventas/${movement.ventaId}/ticket?volver=${encodeURIComponent(`/admin/cuentas-corrientes/${account.clienteId}`)}`}
+                            href={`/vendedor/ventas/${movement.ventaId}/ticket?volver=${encodeURIComponent(detailHref)}`}
                             className="text-sm font-bold text-lime-300 transition hover:text-lime-200"
                           >
                             Ver venta
@@ -246,6 +269,10 @@ export default async function CustomerAccountDetailPage({
               </table>
             </div>
           </div>
+          <PaginationControls
+            pagination={paginatedMovements}
+            basePath={`/admin/cuentas-corrientes/${account.clienteId}`}
+          />
         </section>
       </div>
     </AppShell>

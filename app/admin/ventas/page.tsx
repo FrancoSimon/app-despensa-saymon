@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { parsePage } from "@/lib/pagination";
 import { createReportDateRange } from "@/lib/reports/dates";
 import { paymentMethodLabels } from "@/lib/sales/payment-methods";
 import {
@@ -14,6 +16,7 @@ type AdminSalesPageProps = {
     estado?: string;
     desde?: string;
     hasta?: string;
+    pagina?: string;
     volver?: string;
   }>;
 };
@@ -59,10 +62,11 @@ export default async function AdminSalesPage({
   searchParams,
 }: AdminSalesPageProps) {
   const profile = await requireAdminProfile();
-  const { estado, desde, hasta, volver } = await searchParams;
+  const { estado, desde, hasta, pagina, volver } = await searchParams;
   const status = isAdminSaleStatusFilter(estado) ? estado : "todas";
   const range = createReportDateRange(desde, hasta);
-  const sales = await listAdminSales(status, range);
+  const page = parsePage(pagina);
+  const sales = await listAdminSales(status, range, { page });
   const backHref = getBackHref(volver);
   const query = new URLSearchParams({
     desde: range.from,
@@ -75,6 +79,10 @@ export default async function AdminSalesPage({
 
   if (backHref !== "/admin") {
     query.set("volver", backHref);
+  }
+
+  if (page > 1) {
+    query.set("pagina", String(page));
   }
 
   const returnHref = `/admin/ventas?${query.toString()}`;
@@ -171,7 +179,7 @@ export default async function AdminSalesPage({
               </tr>
             </thead>
             <tbody>
-              {sales.map((sale) => (
+              {sales.items.map((sale) => (
                 <tr key={sale.id} className="border-t border-white/10">
                   <td className="px-4 py-4 font-black text-white">
                     #{sale.id.slice(0, 8)}
@@ -212,7 +220,7 @@ export default async function AdminSalesPage({
                   </td>
                 </tr>
               ))}
-              {sales.length === 0 ? (
+              {sales.items.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-zinc-400">
                     No hay ventas para mostrar.
@@ -223,6 +231,11 @@ export default async function AdminSalesPage({
           </table>
         </div>
       </div>
+      <PaginationControls
+        pagination={sales}
+        basePath="/admin/ventas"
+        query={query}
+      />
     </AppShell>
   );
 }

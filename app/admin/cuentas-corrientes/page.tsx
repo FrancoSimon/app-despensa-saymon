@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { registerAccountPaymentAction } from "@/lib/accounts/actions";
 import {
+  listAccountMovementsPaginated,
   listCustomerAccountSummaries,
-  listRecentAccountMovements,
 } from "@/lib/accounts/queries";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { parsePage } from "@/lib/pagination";
 import { paymentMethodLabels, paymentMethodOptions } from "@/lib/sales/payment-methods";
 
 type AdminCurrentAccountsPageProps = {
   searchParams: Promise<{
+    movimientosPagina?: string;
     q?: string;
   }>;
 };
@@ -60,12 +63,19 @@ export default async function AdminCurrentAccountsPage({
   searchParams,
 }: AdminCurrentAccountsPageProps) {
   const profile = await requireAdminProfile();
-  const { q } = await searchParams;
+  const { movimientosPagina, q } = await searchParams;
   const search = typeof q === "string" ? q.trim() : "";
+  const movementsPage = parsePage(movimientosPagina);
   const [accounts, movements] = await Promise.all([
     listCustomerAccountSummaries(),
-    listRecentAccountMovements(),
+    listAccountMovementsPaginated({ page: movementsPage }),
   ]);
+  const movementsQuery = new URLSearchParams();
+
+  if (search) {
+    movementsQuery.set("q", search);
+  }
+
   const totalDebt = accounts.reduce((sum, account) => sum + account.saldo, 0);
   const filteredAccounts = accounts.filter((account) =>
     matchesSearch(account, search),
@@ -270,7 +280,7 @@ export default async function AdminCurrentAccountsPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {movements.map((movement) => (
+                  {movements.items.map((movement) => (
                     <tr key={movement.id} className="border-t border-white/10">
                       <td className="px-3 py-3 text-zinc-400">
                         {formatDate(movement.createdAt)}
@@ -305,7 +315,7 @@ export default async function AdminCurrentAccountsPage({
                       </td>
                     </tr>
                   ))}
-                  {movements.length === 0 ? (
+                  {movements.items.length === 0 ? (
                     <tr>
                       <td
                         colSpan={4}
@@ -319,6 +329,12 @@ export default async function AdminCurrentAccountsPage({
               </table>
             </div>
           </div>
+          <PaginationControls
+            pagination={movements}
+            basePath="/admin/cuentas-corrientes"
+            pageParam="movimientosPagina"
+            query={movementsQuery}
+          />
         </section>
       </div>
     </AppShell>

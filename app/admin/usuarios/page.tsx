@@ -1,12 +1,23 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { roleLabels } from "@/lib/auth/roles";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
-import { listAdminUsers } from "@/lib/users/queries";
+import { parsePage } from "@/lib/pagination";
+import { listAdminUsersPaginated } from "@/lib/users/queries";
 
-export default async function AdminUsersPage() {
+type AdminUsersPageProps = {
+  searchParams: Promise<{
+    pagina?: string;
+  }>;
+};
+
+export default async function AdminUsersPage({
+  searchParams,
+}: AdminUsersPageProps) {
   const profile = await requireAdminProfile();
-  const users = await listAdminUsers();
+  const { pagina } = await searchParams;
+  const users = await listAdminUsersPaginated({ page: parsePage(pagina) });
 
   return (
     <AppShell profile={profile} title="Usuarios">
@@ -39,7 +50,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {users.items.map((user) => (
                 <tr key={user.id} className="border-t border-white/10">
                   <td className="px-4 py-4">
                     <p className="font-semibold text-white">{user.nombre}</p>
@@ -75,7 +86,7 @@ export default async function AdminUsersPage() {
                   </td>
                 </tr>
               ))}
-              {users.length === 0 ? (
+              {users.items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-10 text-center text-zinc-400">
                     No hay usuarios para mostrar.
@@ -86,6 +97,7 @@ export default async function AdminUsersPage() {
           </table>
         </div>
       </div>
+      <PaginationControls pagination={users} basePath="/admin/usuarios" />
     </AppShell>
   );
 }

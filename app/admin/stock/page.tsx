@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { StockProductSelector } from "@/components/stock/stock-product-selector";
 import { StockSupplierSelector } from "@/components/stock/stock-supplier-selector";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
+import { parsePage } from "@/lib/pagination";
 import { listAdminProducts } from "@/lib/products/queries";
 import {
   registerStockMovementAction,
@@ -10,9 +12,16 @@ import {
 } from "@/lib/stock/actions";
 import {
   listActiveSuppliers,
-  listRecentStockMovements,
-  listRecentStockPurchases,
+  listStockMovementsPaginated,
+  listStockPurchasesPaginated,
 } from "@/lib/stock/queries";
+
+type AdminStockPageProps = {
+  searchParams: Promise<{
+    comprasPagina?: string;
+    movimientosPagina?: string;
+  }>;
+};
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString("es-AR", {
@@ -56,14 +65,30 @@ const ORIGIN_LABELS = {
   compra: "Compra",
 };
 
-export default async function AdminStockPage() {
+export default async function AdminStockPage({
+  searchParams,
+}: AdminStockPageProps) {
   const profile = await requireAdminProfile();
+  const { comprasPagina, movimientosPagina } = await searchParams;
+  const purchasesPage = parsePage(comprasPagina);
+  const movementsPage = parsePage(movimientosPagina);
   const [products, suppliers, purchases, movements] = await Promise.all([
     listAdminProducts(),
     listActiveSuppliers(),
-    listRecentStockPurchases(),
-    listRecentStockMovements(),
+    listStockPurchasesPaginated({ page: purchasesPage }),
+    listStockMovementsPaginated({ page: movementsPage }),
   ]);
+  const purchasesQuery = new URLSearchParams();
+  const movementsQuery = new URLSearchParams();
+
+  if (movementsPage > 1) {
+    purchasesQuery.set("movimientosPagina", String(movementsPage));
+  }
+
+  if (purchasesPage > 1) {
+    movementsQuery.set("comprasPagina", String(purchasesPage));
+  }
+
   const activeProducts = products.filter((product) => product.activo);
   const lowStockProducts = activeProducts
     .filter((product) => product.stock < product.stockMinimo)
@@ -229,7 +254,7 @@ export default async function AdminStockPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchases.map((purchase) => (
+                  {purchases.items.map((purchase) => (
                     <tr key={purchase.id} className="border-t border-white/10">
                       <td className="px-3 py-3 text-zinc-400">
                         {formatDateOnly(purchase.fechaCompra)}
@@ -259,7 +284,7 @@ export default async function AdminStockPage() {
                       </td>
                     </tr>
                   ))}
-                  {purchases.length === 0 ? (
+                  {purchases.items.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
@@ -273,6 +298,12 @@ export default async function AdminStockPage() {
               </table>
             </div>
           </div>
+          <PaginationControls
+            pagination={purchases}
+            basePath="/admin/stock"
+            pageParam="comprasPagina"
+            query={purchasesQuery}
+          />
         </section>
       </div>
 
@@ -344,7 +375,7 @@ export default async function AdminStockPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {movements.map((movement) => (
+                  {movements.items.map((movement) => (
                     <tr key={movement.id} className="border-t border-white/10">
                       <td className="px-3 py-3 text-zinc-400">
                         {formatDate(movement.createdAt)}
@@ -382,7 +413,7 @@ export default async function AdminStockPage() {
                       </td>
                     </tr>
                   ))}
-                  {movements.length === 0 ? (
+                  {movements.items.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
@@ -396,6 +427,12 @@ export default async function AdminStockPage() {
               </table>
             </div>
           </div>
+          <PaginationControls
+            pagination={movements}
+            basePath="/admin/stock"
+            pageParam="movimientosPagina"
+            query={movementsQuery}
+          />
         </section>
       </div>
     </AppShell>

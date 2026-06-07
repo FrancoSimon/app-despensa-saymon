@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type {
   AdminWholesaleOrder,
   AdminWholesaleOrderItemRow,
@@ -99,8 +105,10 @@ export function isAdminWholesaleOrderStatusFilter(
 
 export async function listWholesaleOrdersForAdmin(
   status: AdminWholesaleOrderStatusFilter = "pendiente",
+  paginationInput: PaginationInput = {},
 ) {
   const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
   let query = supabase
     .from("pedidos_mayoristas")
     .select(
@@ -132,24 +140,34 @@ export async function listWholesaleOrdersForAdmin(
           )
         )
       `,
+      { count: "exact" },
     )
-    .order("fecha_pedido", { ascending: status === "pendiente" });
+    .order("fecha_pedido", { ascending: status === "pendiente" })
+    .range(pagination.from, pagination.to);
 
   if (status !== "todos") {
     query = query.eq("estado", status);
   }
 
-  const { data, error } = await query.returns<AdminWholesaleOrderRow[]>();
+  const { data, error, count } = await query.returns<AdminWholesaleOrderRow[]>();
 
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") {
-      return [];
+      return emptyPaginatedResult<AdminWholesaleOrder>(
+        pagination.page,
+        pagination.pageSize,
+      );
     }
 
     throw new Error(error.message);
   }
 
-  return data.map(mapAdminWholesaleOrder);
+  return createPaginatedResult<AdminWholesaleOrder>({
+    items: data.map(mapAdminWholesaleOrder),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
 
 export const listPendingWholesaleOrdersForAdmin = () =>

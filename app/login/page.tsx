@@ -28,14 +28,17 @@ export default function LoginPage() {
         </Link>
         <div className="py-16">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-lime-300">
-            Acceso seguro
+            Buen inicio
           </p>
           <h1 className="mt-4 max-w-xl text-5xl font-black leading-tight">
-            Mostrador, administracion y mayoristas en un solo sistema.
+            Que hoy sea una jornada ordenada, agil y con buenas ventas.
           </h1>
+          <p className="mt-5 max-w-lg text-base leading-7 text-zinc-400">
+            Ingresa para continuar cuidando cada movimiento de Comercio SAYMON.
+          </p>
         </div>
         <p className="text-sm text-zinc-500">
-          Fiambala, Catamarca. POS + B2B para el comercio SAYMON.
+          Fiambala, Catamarca. Comercio SAYMON.
         </p>
       </section>
       <section className="flex items-center justify-center px-6 py-12">

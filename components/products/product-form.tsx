@@ -16,6 +16,29 @@ const inputClass =
 
 const labelClass = "mb-2 block text-sm font-medium text-zinc-200";
 
+const productCategoryOptions = [
+  "General",
+  "Almacen",
+  "Bebidas",
+  "Lacteos",
+  "Fiambres",
+  "Panificados",
+  "Golosinas",
+  "Limpieza",
+  "Perfumeria",
+  "Kiosco",
+  "Congelados",
+  "Mascotas",
+  "Libreria",
+  "Juguetes",
+  "Tecnologia",
+  "Ferreteria",
+  "Bazar",
+  "Textil",
+  "Regaleria",
+  "Otros",
+];
+
 export function ProductForm({
   action,
   product,
@@ -44,10 +67,16 @@ export function ProductForm({
           <input
             className={inputClass}
             name="categoria"
+            list="product-category-options"
             defaultValue={product?.categoria ?? "General"}
             placeholder="Almacen"
             required
           />
+          <datalist id="product-category-options">
+            {productCategoryOptions.map((category) => (
+              <option key={category} value={category} />
+            ))}
+          </datalist>
         </div>
       </div>
 

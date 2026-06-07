@@ -1,4 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
+import {
+  createPaginatedResult,
+  emptyPaginatedResult,
+  getPagination,
+  type PaginationInput,
+} from "@/lib/pagination";
 import type {
   StockMovement,
   StockMovementRow,
@@ -174,6 +180,98 @@ export async function listRecentStockMovements(limit = 20) {
   return data.map(mapMovement);
 }
 
+export async function listStockMovementsPaginated(
+  paginationInput: PaginationInput = {},
+) {
+  const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
+
+  const query = supabase
+    .from("stock_movimientos")
+    .select(
+      `
+        id,
+        tipo,
+        cantidad,
+        stock_anterior,
+        stock_nuevo,
+        motivo,
+        origen,
+        referencia_id,
+        created_at,
+        productos (
+          nombre,
+          categoria
+        ),
+        profiles (
+          nombre
+        )
+      `,
+      { count: "exact" },
+    )
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to)
+    .returns<StockMovementRow[]>();
+  const { data, error, count } = await query;
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return emptyPaginatedResult<StockMovement>(
+        pagination.page,
+        pagination.pageSize,
+      );
+    }
+
+    if (error.code === "42703" || error.code === "PGRST204") {
+      const { data: fallbackData, error: fallbackError, count: fallbackCount } =
+        await supabase
+          .from("stock_movimientos")
+          .select(
+            `
+              id,
+              tipo,
+              cantidad,
+              stock_anterior,
+              stock_nuevo,
+              motivo,
+              created_at,
+              productos (
+                nombre,
+                categoria
+              ),
+              profiles (
+                nombre
+              )
+            `,
+            { count: "exact" },
+          )
+          .order("created_at", { ascending: false })
+          .range(pagination.from, pagination.to)
+          .returns<StockMovementRow[]>();
+
+      if (fallbackError) {
+        throw new Error(fallbackError.message);
+      }
+
+      return createPaginatedResult<StockMovement>({
+        items: fallbackData.map(mapMovement),
+        total: fallbackCount,
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      });
+    }
+
+    throw new Error(error.message);
+  }
+
+  return createPaginatedResult<StockMovement>({
+    items: data.map(mapMovement),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
+}
+
 export async function listRecentStockPurchases(limit = 12) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -214,4 +312,58 @@ export async function listRecentStockPurchases(limit = 12) {
   }
 
   return data.map(mapPurchase);
+}
+
+export async function listStockPurchasesPaginated(
+  paginationInput: PaginationInput = {},
+) {
+  const supabase = await createClient();
+  const pagination = getPagination(paginationInput);
+  const { data, error, count } = await supabase
+    .from("stock_compras")
+    .select(
+      `
+        id,
+        cantidad,
+        costo_unitario,
+        costo_total,
+        fecha_compra,
+        comprobante,
+        notas,
+        created_at,
+        productos (
+          nombre,
+          categoria
+        ),
+        proveedores (
+          nombre
+        ),
+        profiles (
+          nombre
+        )
+      `,
+      { count: "exact" },
+    )
+    .order("fecha_compra", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(pagination.from, pagination.to)
+    .returns<StockPurchaseRow[]>();
+
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return emptyPaginatedResult<StockPurchase>(
+        pagination.page,
+        pagination.pageSize,
+      );
+    }
+
+    throw new Error(error.message);
+  }
+
+  return createPaginatedResult<StockPurchase>({
+    items: data.map(mapPurchase),
+    total: count,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
 }
