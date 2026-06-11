@@ -37,6 +37,27 @@ export type WholesaleOrderRow = {
   total: number | string;
   comentario: string | null;
   motivo_rechazo: string | null;
+  pedido_mayorista_items?: WholesaleOrderItemRow[];
+};
+
+export type WholesaleOrderItemRow = {
+  id: string;
+  producto_id: string;
+  producto_nombre: string;
+  cantidad: number;
+  precio_unitario: number | string;
+  precio_especial_aplicado: boolean;
+  subtotal: number | string;
+};
+
+export type WholesaleOrderItem = {
+  id: string;
+  productoId: string;
+  productoNombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  precioEspecialAplicado: boolean;
+  subtotal: number;
 };
 
 export type WholesaleOrder = {
@@ -48,6 +69,7 @@ export type WholesaleOrder = {
   total: number;
   comentario: string | null;
   motivoRechazo: string | null;
+  items: WholesaleOrderItem[];
 };
 
 export type CreateWholesaleOrderState = {
@@ -90,7 +112,7 @@ export type AdminWholesaleOrderItem = {
   stockActual: number | null;
 };
 
-export type AdminWholesaleOrder = WholesaleOrder & {
+export type AdminWholesaleOrder = Omit<WholesaleOrder, "items"> & {
   mayorista: {
     nombre: string;
     email: string;

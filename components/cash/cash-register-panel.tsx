@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   closeCashRegisterAction,
   openCashRegisterAction,
@@ -56,6 +57,9 @@ export function CashRegisterPanel({
     closeCashRegisterAction,
     initialState,
   );
+  const closeFormRef = useRef<HTMLFormElement | null>(null);
+  const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const state = movementState.message
     ? movementState
     : closeState.message
@@ -78,6 +82,11 @@ export function CashRegisterPanel({
             }
           >
             {state.message}
+          </p>
+        ) : null}
+        {validationMessage ? (
+          <p className="mt-4 rounded-md border border-yellow-300/30 bg-yellow-950/20 px-4 py-3 text-sm text-yellow-100">
+            {validationMessage}
           </p>
         ) : null}
 
@@ -242,7 +251,12 @@ export function CashRegisterPanel({
               )}
             </div>
 
-            <form action={closeAction} className="mt-5 grid gap-4">
+            <form
+              ref={closeFormRef}
+              action={closeAction}
+              className="mt-5 grid gap-4"
+              noValidate
+            >
               <input type="hidden" name="cajaId" value={cashRegister.id} />
               <label className="text-sm font-semibold text-zinc-200">
                 Efectivo real contado
@@ -253,7 +267,6 @@ export function CashRegisterPanel({
                   step="0.01"
                   defaultValue={cashRegister.efectivoEsperado.toFixed(2)}
                   className="mt-2 h-11 w-full rounded-md border border-white/10 bg-zinc-950 px-3 text-white outline-none transition focus:border-lime-300"
-                  required
                 />
               </label>
               <label className="text-sm font-semibold text-zinc-200">
@@ -265,11 +278,23 @@ export function CashRegisterPanel({
                 />
               </label>
               <button
+                type="button"
                 disabled={closing}
-                onClick={(event) => {
-                  if (!window.confirm("Cerrar esta caja?")) {
-                    event.preventDefault();
+                onClick={() => {
+                  const formData = closeFormRef.current
+                    ? new FormData(closeFormRef.current)
+                    : null;
+                  const efectivoReal = Number(formData?.get("efectivoReal"));
+
+                  if (!Number.isFinite(efectivoReal) || efectivoReal < 0) {
+                    setValidationMessage(
+                      "Ingresa el efectivo real contado para cerrar la caja.",
+                    );
+                    return;
                   }
+
+                  setValidationMessage(null);
+                  setIsCloseConfirmOpen(true);
                 }}
                 className="rounded-md border border-lime-300/40 px-5 py-3 text-sm font-black text-lime-100 transition hover:bg-lime-950 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -283,6 +308,18 @@ export function CashRegisterPanel({
           </p>
         )}
       </section>
+      <ConfirmDialog
+        isOpen={isCloseConfirmOpen}
+        title="Cerrar caja"
+        description="Se registrara el efectivo real contado y la caja quedara cerrada para este turno."
+        confirmLabel="Cerrar caja"
+        pending={closing}
+        onCancel={() => setIsCloseConfirmOpen(false)}
+        onConfirm={() => {
+          closeFormRef.current?.requestSubmit();
+          setIsCloseConfirmOpen(false);
+        }}
+      />
     </div>
   );
 }

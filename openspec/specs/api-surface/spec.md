@@ -177,3 +177,28 @@ The wholesale portal SHALL provide fast product selection, keyboard shortcuts, a
 #### Scenario: Wholesaler uses shortcuts
 - **WHEN** a wholesaler is on the ordering screen
 - **THEN** the app supports shortcuts for focusing search, focusing category, clearing the cart, and confirming the order
+
+### Requirement: Wholesale Order Detail Modal
+The wholesale portal SHALL allow wholesalers to inspect a previous order without leaving the page.
+
+#### Scenario: Wholesaler opens order detail
+- **WHEN** a wholesaler clicks "Ver detalle" on a previous order
+- **THEN** the app shows a modal with order status, delivery date, items, quantities, prices, subtotals, and total
+
+#### Scenario: Wholesaler closes order detail
+- **WHEN** a wholesaler closes the detail modal
+- **THEN** the app returns to the order list without navigation
+
+### Requirement: In-App Confirmation Dialogs
+Critical actions SHALL use styled in-app confirmation dialogs instead of browser-native confirm dialogs.
+
+#### Scenario: Admin confirms critical action
+- **WHEN** an admin attempts a critical action such as confirming, rejecting, delivering, canceling a wholesale order, or closing a cash register
+- **THEN** the app shows an in-app dialog with action-specific title, message, cancel action, and confirm action
+
+### Requirement: Inline Validation Feedback
+Forms SHALL show validation feedback inside the app UI instead of relying on browser-native validation bubbles for supported forms.
+
+#### Scenario: User submits an incomplete supported form
+- **WHEN** a user submits a supported form with missing or invalid required values
+- **THEN** the app shows a clear inline validation message near the related field or action

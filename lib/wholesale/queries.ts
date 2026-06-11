@@ -9,6 +9,7 @@ import type {
   AdminWholesaleOrder,
   AdminWholesaleOrderItemRow,
   AdminWholesaleOrderRow,
+  WholesaleOrderItemRow,
   WholesaleOrder,
   WholesaleOrderRow,
   WholesaleOrderStatus,
@@ -16,6 +17,18 @@ import type {
 
 function toNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
+}
+
+function mapWholesaleOrderItem(row: WholesaleOrderItemRow) {
+  return {
+    id: row.id,
+    productoId: row.producto_id,
+    productoNombre: row.producto_nombre,
+    cantidad: row.cantidad,
+    precioUnitario: toNumber(row.precio_unitario),
+    precioEspecialAplicado: row.precio_especial_aplicado,
+    subtotal: toNumber(row.subtotal),
+  };
 }
 
 function mapWholesaleOrder(row: WholesaleOrderRow): WholesaleOrder {
@@ -28,6 +41,7 @@ function mapWholesaleOrder(row: WholesaleOrderRow): WholesaleOrder {
     total: toNumber(row.total),
     comentario: row.comentario,
     motivoRechazo: row.motivo_rechazo,
+    items: row.pedido_mayorista_items?.map(mapWholesaleOrderItem) ?? [],
   };
 }
 
@@ -70,7 +84,16 @@ export async function listMyWholesaleOrders() {
         estado,
         total,
         comentario,
-        motivo_rechazo
+        motivo_rechazo,
+        pedido_mayorista_items (
+          id,
+          producto_id,
+          producto_nombre,
+          cantidad,
+          precio_unitario,
+          precio_especial_aplicado,
+          subtotal
+        )
       `,
     )
     .order("fecha_pedido", { ascending: false })

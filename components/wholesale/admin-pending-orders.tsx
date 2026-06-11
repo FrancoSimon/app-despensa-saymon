@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { manageWholesaleOrderAction } from "@/lib/wholesale/admin-actions";
 import type {
   AdminWholesaleOrder,
@@ -41,6 +42,14 @@ const statusLabels: Record<WholesaleOrderStatus, string> = {
   cancelado: "Cancelado",
 };
 
+type ConfirmRequest = {
+  description: string;
+  formKey: string;
+  title: string;
+  confirmLabel: string;
+  tone?: "default" | "danger";
+};
+
 function money(value: number) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -77,6 +86,42 @@ export function AdminPendingOrders({
     manageWholesaleOrderAction,
     initialState,
   );
+  const formRefs = useRef<Record<string, HTMLFormElement | null>>({});
+  const [confirmRequest, setConfirmRequest] = useState<ConfirmRequest | null>(
+    null,
+  );
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+
+  function setFormRef(key: string, node: HTMLFormElement | null) {
+    formRefs.current[key] = node;
+  }
+
+  function requestActionConfirm(config: ConfirmRequest) {
+    const form = formRefs.current[config.formKey];
+    const formData = form ? new FormData(form) : null;
+    const actionType = formData?.get("actionType");
+
+    if (formData && actionType === "cancelar") {
+      const motivo = formData.get("motivoCancelacion");
+
+      if (typeof motivo !== "string" || !motivo.trim()) {
+        setValidationMessage("Ingresa el motivo de cancelacion.");
+        return;
+      }
+    }
+
+    setValidationMessage(null);
+    setConfirmRequest(config);
+  }
+
+  function submitConfirmedAction() {
+    if (!confirmRequest) {
+      return;
+    }
+
+    formRefs.current[confirmRequest.formKey]?.requestSubmit();
+    setConfirmRequest(null);
+  }
 
   return (
     <div className="grid gap-5">
@@ -121,6 +166,11 @@ export function AdminPendingOrders({
           }
         >
           {state.message}
+        </p>
+      ) : null}
+      {validationMessage ? (
+        <p className="rounded-md border border-yellow-300/30 bg-yellow-950/20 px-4 py-3 text-sm text-yellow-100">
+          {validationMessage}
         </p>
       ) : null}
 
@@ -236,7 +286,11 @@ export function AdminPendingOrders({
 
             {order.estado === "pendiente" ? (
               <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr]">
-                <form action={formAction} className="grid gap-3">
+                <form
+                  ref={(node) => setFormRef(`confirmar-${order.id}`, node)}
+                  action={formAction}
+                  className="grid gap-3"
+                >
                   <input type="hidden" name="actionType" value="confirmar" />
                   <input type="hidden" name="pedidoId" value={order.id} />
                   <label className="text-sm font-semibold text-zinc-200">
@@ -257,16 +311,16 @@ export function AdminPendingOrders({
                     </select>
                   </label>
                   <button
-                    type="submit"
+                    type="button"
                     disabled={pending}
-                    onClick={(event) => {
-                      if (
-                        !window.confirm(
-                          "Confirmar pedido y descontar stock disponible?",
-                        )
-                      ) {
-                        event.preventDefault();
-                      }
+                    onClick={() => {
+                      requestActionConfirm({
+                        formKey: `confirmar-${order.id}`,
+                        title: "Confirmar pedido",
+                        description:
+                          "Se descontara el stock disponible y el pedido pasara a confirmado.",
+                        confirmLabel: "Confirmar pedido",
+                      });
                     }}
                     className="rounded-md bg-lime-300 px-4 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -274,7 +328,11 @@ export function AdminPendingOrders({
                   </button>
                 </form>
 
-                <form action={formAction} className="grid gap-3">
+                <form
+                  ref={(node) => setFormRef(`rechazar-${order.id}`, node)}
+                  action={formAction}
+                  className="grid gap-3"
+                >
                   <input type="hidden" name="actionType" value="rechazar" />
                   <input type="hidden" name="pedidoId" value={order.id} />
                   <label className="text-sm font-semibold text-zinc-200">
@@ -287,12 +345,17 @@ export function AdminPendingOrders({
                     />
                   </label>
                   <button
-                    type="submit"
+                    type="button"
                     disabled={pending}
-                    onClick={(event) => {
-                      if (!window.confirm("Rechazar este pedido mayorista?")) {
-                        event.preventDefault();
-                      }
+                    onClick={() => {
+                      requestActionConfirm({
+                        formKey: `rechazar-${order.id}`,
+                        title: "Rechazar pedido",
+                        description:
+                          "El pedido quedara rechazado y no se descontara stock.",
+                        confirmLabel: "Rechazar pedido",
+                        tone: "danger",
+                      });
                     }}
                     className="rounded-md border border-red-400/30 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -304,16 +367,23 @@ export function AdminPendingOrders({
 
             {order.estado === "confirmado" ? (
               <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_1fr]">
-                <form action={formAction}>
+                <form
+                  ref={(node) => setFormRef(`entregar-${order.id}`, node)}
+                  action={formAction}
+                >
                   <input type="hidden" name="actionType" value="entregar" />
                   <input type="hidden" name="pedidoId" value={order.id} />
                   <button
-                    type="submit"
+                    type="button"
                     disabled={pending}
-                    onClick={(event) => {
-                      if (!window.confirm("Marcar este pedido como entregado?")) {
-                        event.preventDefault();
-                      }
+                    onClick={() => {
+                      requestActionConfirm({
+                        formKey: `entregar-${order.id}`,
+                        title: "Marcar como entregado",
+                        description:
+                          "El pedido pasara a entregado y quedara cerrado para seguimiento.",
+                        confirmLabel: "Marcar entregado",
+                      });
                     }}
                     className="w-full rounded-md bg-lime-300 px-4 py-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -321,7 +391,12 @@ export function AdminPendingOrders({
                   </button>
                 </form>
 
-                <form action={formAction} className="grid gap-3">
+                <form
+                  ref={(node) => setFormRef(`cancelar-${order.id}`, node)}
+                  action={formAction}
+                  className="grid gap-3"
+                  noValidate
+                >
                   <input type="hidden" name="actionType" value="cancelar" />
                   <input type="hidden" name="pedidoId" value={order.id} />
                   <label className="text-sm font-semibold text-zinc-200">
@@ -330,20 +405,20 @@ export function AdminPendingOrders({
                       name="motivoCancelacion"
                       rows={3}
                       className="mt-2 w-full resize-none rounded-md border border-white/10 bg-zinc-950 px-3 py-3 text-white outline-none transition focus:border-red-300"
-                      required
                     />
                   </label>
                   <button
-                    type="submit"
+                    type="button"
                     disabled={pending}
-                    onClick={(event) => {
-                      if (
-                        !window.confirm(
-                          "Cancelar pedido y reponer el stock descontado?",
-                        )
-                      ) {
-                        event.preventDefault();
-                      }
+                    onClick={() => {
+                      requestActionConfirm({
+                        formKey: `cancelar-${order.id}`,
+                        title: "Cancelar pedido",
+                        description:
+                          "Se cancelara el pedido y se repondra el stock descontado.",
+                        confirmLabel: "Cancelar pedido",
+                        tone: "danger",
+                      });
                     }}
                     className="rounded-md border border-red-400/30 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-950 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -368,6 +443,16 @@ export function AdminPendingOrders({
           No hay pedidos mayoristas para este filtro.
         </p>
       ) : null}
+      <ConfirmDialog
+        isOpen={confirmRequest !== null}
+        title={confirmRequest?.title ?? ""}
+        description={confirmRequest?.description ?? ""}
+        confirmLabel={confirmRequest?.confirmLabel ?? "Confirmar"}
+        tone={confirmRequest?.tone}
+        pending={pending}
+        onCancel={() => setConfirmRequest(null)}
+        onConfirm={submitConfirmedAction}
+      />
     </div>
   );
 }

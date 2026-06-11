@@ -68,6 +68,16 @@ function formatDate(date: string) {
   });
 }
 
+function formatDateTime(date: string) {
+  return new Date(date).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function wholesaleUnitPrice(product: Product, quantity: number) {
   if (
     product.precioMayoristaEspecial !== null &&
@@ -94,6 +104,7 @@ export function WholesaleOrderTerminal({
   const [cart, setCart] = useState<CartItem[]>([]);
   const [ordersPage, setOrdersPage] = useState(1);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [detailOrder, setDetailOrder] = useState<WholesaleOrder | null>(null);
   const [deliveryDate, setDeliveryDate] = useState(
     deliveryOptions.at(0)?.value ?? "",
   );
@@ -282,6 +293,15 @@ export function WholesaleOrderTerminal({
         return;
       }
 
+      if (detailOrder) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setDetailOrder(null);
+        }
+
+        return;
+      }
+
       if (event.key === "/" && !isTyping) {
         event.preventDefault();
         searchInputRef.current?.focus();
@@ -308,7 +328,7 @@ export function WholesaleOrderTerminal({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isConfirmOpen, requestConfirmOrder, submitOrder]);
+  }, [detailOrder, isConfirmOpen, requestConfirmOrder, submitOrder]);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -637,6 +657,13 @@ export function WholesaleOrderTerminal({
                     </p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setDetailOrder(order)}
+                  className="mt-3 w-full rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-200 transition hover:border-lime-300 hover:text-lime-200"
+                >
+                  Ver detalle
+                </button>
               </div>
             ))}
             {orders.length === 0 ? (
@@ -708,6 +735,136 @@ export function WholesaleOrderTerminal({
             <p className="mt-3 text-xs text-zinc-600">
               Atajo: Ctrl + Enter confirma desde este cuadro.
             </p>
+          </div>
+        </div>
+      ) : null}
+
+      {detailOrder ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4">
+          <div className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-lg border border-white/10 bg-zinc-950 p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime-300">
+                  Detalle pedido
+                </p>
+                <h3 className="mt-1 text-2xl font-black text-white">
+                  Pedido #{detailOrder.id.slice(0, 8)}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailOrder(null)}
+                className="rounded-md border border-white/10 px-3 py-2 text-sm font-bold text-zinc-300 transition hover:border-lime-300"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-3 rounded-md border border-white/10 bg-black p-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Estado
+                </p>
+                <p className="mt-1 font-black text-lime-300">
+                  {statusLabels[detailOrder.estado]}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Pedido
+                </p>
+                <p className="mt-1 text-sm font-semibold text-zinc-200">
+                  {formatDateTime(detailOrder.fechaPedido)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Entrega deseada
+                </p>
+                <p className="mt-1 text-sm font-semibold text-zinc-200">
+                  {formatDate(detailOrder.fechaEntregaDeseada)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Entrega asignada
+                </p>
+                <p className="mt-1 text-sm font-semibold text-zinc-200">
+                  {detailOrder.fechaEntregaAsignada
+                    ? formatDate(detailOrder.fechaEntregaAsignada)
+                    : "-"}
+                </p>
+              </div>
+            </div>
+
+            {detailOrder.comentario ? (
+              <p className="mt-4 rounded-md border border-white/10 bg-black px-3 py-2 text-sm text-zinc-300">
+                {detailOrder.comentario}
+              </p>
+            ) : null}
+
+            {detailOrder.motivoRechazo ? (
+              <p className="mt-4 rounded-md border border-red-400/30 bg-red-950/30 px-3 py-2 text-sm text-red-100">
+                Motivo: {detailOrder.motivoRechazo}
+              </p>
+            ) : null}
+
+            <div className="mt-5 overflow-hidden rounded-md border border-white/10">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px] border-collapse text-left text-sm">
+                  <thead className="bg-zinc-900 text-xs uppercase tracking-[0.16em] text-zinc-400">
+                    <tr>
+                      <th className="px-3 py-3">Producto</th>
+                      <th className="px-3 py-3">Cant.</th>
+                      <th className="px-3 py-3">Precio</th>
+                      <th className="px-3 py-3">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detailOrder.items.map((item) => (
+                      <tr key={item.id} className="border-t border-white/10">
+                        <td className="px-3 py-3">
+                          <p className="font-semibold text-white">
+                            {item.productoNombre}
+                          </p>
+                          {item.precioEspecialAplicado ? (
+                            <p className="mt-1 text-xs text-lime-300">
+                              Precio especial aplicado
+                            </p>
+                          ) : null}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-300">
+                          {item.cantidad}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-300">
+                          {money(item.precioUnitario)}
+                        </td>
+                        <td className="px-3 py-3 font-bold text-white">
+                          {money(item.subtotal)}
+                        </td>
+                      </tr>
+                    ))}
+                    {detailOrder.items.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-3 py-8 text-center text-zinc-400"
+                        >
+                          No hay productos para mostrar.
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-md border border-white/10 bg-black p-4">
+              <div className="flex justify-between gap-3 text-xl font-black text-white">
+                <span>Total</span>
+                <span>{money(detailOrder.total)}</span>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
