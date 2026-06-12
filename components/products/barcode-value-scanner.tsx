@@ -84,46 +84,38 @@ export function BarcodeValueScanner({
   }, []);
 
   return (
-    <div className="mt-3 rounded-md border border-white/10 bg-zinc-950 p-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-bold text-white">Lector de codigo</p>
-          <p className="mt-1 text-xs text-zinc-500">
-            Usa la camara o un lector compatible para completar el campo.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {isScanning ? (
-            <button
-              type="button"
-              onClick={() => void stopScanner()}
-              className="rounded-md border border-white/15 px-3 py-2 text-sm font-bold text-zinc-200 transition hover:border-lime-300"
-            >
-              Cerrar
-            </button>
-          ) : null}
+    <div className="contents">
+      <div className="flex gap-2">
+        {isScanning ? (
           <button
             type="button"
-            onClick={() => void startScanner()}
-            disabled={isScanning}
-            className="rounded-md bg-lime-300 px-3 py-2 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => void stopScanner()}
+            className="h-11 rounded-md border border-white/15 px-3 text-sm font-bold text-zinc-200 transition hover:border-lime-300"
           >
-            Leer codigo
+            Cerrar
           </button>
-        </div>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => void startScanner()}
+          disabled={isScanning}
+          className="h-11 whitespace-nowrap rounded-md bg-lime-300 px-3 text-sm font-black text-black transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Leer codigo
+        </button>
       </div>
 
       <div
         id={scannerId}
         className={
           isScanning
-            ? "mt-3 overflow-hidden rounded-md border border-lime-300/40 bg-black"
+            ? "col-span-full mt-3 overflow-hidden rounded-md border border-lime-300/40 bg-black"
             : "hidden"
         }
       />
 
       {message ? (
-        <p className="mt-3 rounded-md border border-white/10 bg-black px-3 py-2 text-sm text-zinc-300">
+        <p className="col-span-full mt-3 rounded-md border border-white/10 bg-black px-3 py-2 text-sm text-zinc-300">
           {message}
         </p>
       ) : null}

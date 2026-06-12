@@ -160,14 +160,16 @@ export function ProductForm({
         </div>
         <div>
           <label className={labelClass}>Codigo de barras</label>
-          <input
-            className={inputClass}
-            name="codigoBarras"
-            value={barcodeValue}
-            onChange={(event) => setBarcodeValue(event.target.value)}
-            placeholder="Opcional"
-          />
-          <BarcodeValueScanner onCodeScanned={setBarcodeValue} />
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <input
+              className={inputClass}
+              name="codigoBarras"
+              value={barcodeValue}
+              onChange={(event) => setBarcodeValue(event.target.value)}
+              placeholder="Opcional"
+            />
+            <BarcodeValueScanner onCodeScanned={setBarcodeValue} />
+          </div>
         </div>
       </div>
 
