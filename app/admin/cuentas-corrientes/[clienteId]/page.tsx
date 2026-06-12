@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { PaginationControls } from "@/components/navigation/pagination-controls";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { registerAccountPaymentAction } from "@/lib/accounts/actions";
 import { getCustomerAccountDetail } from "@/lib/accounts/queries";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
@@ -142,7 +143,13 @@ export default async function CustomerAccountDetailPage({
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
           <h2 className="text-xl font-black text-white">Registrar pago</h2>
-          <form action={registerAccountPaymentAction} className="mt-5 grid gap-4">
+          <ConfirmedActionForm
+            action={registerAccountPaymentAction}
+            className="mt-5 grid gap-4"
+            title="Registrar pago"
+            description={`Se registrara un pago en la cuenta corriente de ${account.clienteNombre} y se actualizara su saldo.`}
+            confirmLabel="Registrar pago"
+          >
             <input type="hidden" name="clienteId" value={account.clienteId} />
             <label className="text-sm font-semibold text-zinc-200">
               Monto
@@ -194,7 +201,7 @@ export default async function CustomerAccountDetailPage({
             >
               Registrar pago
             </button>
-          </form>
+          </ConfirmedActionForm>
         </section>
 
         <section className="rounded-lg border border-white/10 bg-black p-5">

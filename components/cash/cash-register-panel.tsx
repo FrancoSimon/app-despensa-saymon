@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import {
   closeCashRegisterAction,
   openCashRegisterAction,
@@ -165,9 +166,12 @@ export function CashRegisterPanel({
               />
             </div>
 
-            <form
+            <ConfirmedActionForm
               action={movementAction}
               className="mt-5 rounded-md border border-white/10 bg-zinc-950 p-4"
+              title="Registrar movimiento de caja"
+              description="Se registrara este ingreso o retiro de efectivo y se actualizara el resumen de la caja abierta."
+              confirmLabel="Registrar movimiento"
             >
               <input type="hidden" name="cajaId" value={cashRegister.id} />
               <h3 className="text-sm font-black uppercase tracking-[0.16em] text-lime-300">
@@ -213,7 +217,7 @@ export function CashRegisterPanel({
               >
                 {moving ? "Registrando..." : "Registrar movimiento"}
               </button>
-            </form>
+            </ConfirmedActionForm>
 
             <div className="mt-5 overflow-hidden rounded-md border border-white/10">
               <div className="border-b border-white/10 bg-zinc-950 px-4 py-3">

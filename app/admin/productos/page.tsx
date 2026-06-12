@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PaginationControls } from "@/components/navigation/pagination-controls";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { deactivateProductAction } from "@/lib/products/actions";
 import { listAdminProductsPaginated } from "@/lib/products/queries";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
@@ -135,12 +136,18 @@ export default async function AdminProductsPage({
                           Editar
                         </Link>
                         {product.activo ? (
-                          <form action={deactivateProductAction}>
+                          <ConfirmedActionForm
+                            action={deactivateProductAction}
+                            title="Desactivar producto"
+                            description={`El producto "${product.nombre}" dejara de estar disponible para nuevas ventas y pedidos. El historial se conserva.`}
+                            confirmLabel="Desactivar"
+                            tone="danger"
+                          >
                             <input type="hidden" name="id" value={product.id} />
                             <button className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-bold text-red-100 transition hover:bg-red-950">
                               Desactivar
                             </button>
-                          </form>
+                          </ConfirmedActionForm>
                         ) : null}
                       </div>
                     </td>

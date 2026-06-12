@@ -1,3 +1,4 @@
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { roleLabels } from "@/lib/auth/roles";
 import type { AdminUser } from "@/lib/users/types";
 
@@ -19,8 +20,19 @@ export function UserForm({
   submitLabel,
   requirePassword = false,
 }: UserFormProps) {
+  const confirmTitle = user ? "Guardar usuario" : "Crear usuario";
+  const confirmDescription = user
+    ? "Se actualizaran los datos, rol o estado del usuario seleccionado."
+    : "Se creara un usuario con el rol seleccionado y acceso segun sus permisos.";
+
   return (
-    <form action={action} className="grid gap-5">
+    <ConfirmedActionForm
+      action={action}
+      className="grid gap-5"
+      title={confirmTitle}
+      description={confirmDescription}
+      confirmLabel={submitLabel}
+    >
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label className={labelClass}>Nombre</label>
@@ -112,6 +124,6 @@ export function UserForm({
           {submitLabel}
         </button>
       </div>
-    </form>
+    </ConfirmedActionForm>
   );
 }

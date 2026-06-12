@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { BarcodeValueScanner } from "@/components/products/barcode-value-scanner";
 import { ProductImageUpload } from "@/components/products/product-image-upload";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { Product } from "@/lib/products/types";
 
 type ProductFormProps = {
@@ -46,11 +47,38 @@ export function ProductForm({
   submitLabel,
   returnTo,
 }: ProductFormProps) {
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const confirmedSubmitRef = useRef(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isCreateConfirmOpen, setIsCreateConfirmOpen] = useState(false);
   const [barcodeValue, setBarcodeValue] = useState(product?.codigoBarras ?? "");
+  const shouldConfirmCreate = !product;
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (!shouldConfirmCreate || confirmedSubmitRef.current) {
+      confirmedSubmitRef.current = false;
+      return;
+    }
+
+    event.preventDefault();
+
+    const form = event.currentTarget;
+
+    if (!form.reportValidity()) {
+      return;
+    }
+
+    setIsCreateConfirmOpen(true);
+  }
+
+  function confirmCreateProduct() {
+    confirmedSubmitRef.current = true;
+    setIsCreateConfirmOpen(false);
+    formRef.current?.requestSubmit();
+  }
 
   return (
-    <form action={action} className="grid gap-5">
+    <form ref={formRef} action={action} onSubmit={handleSubmit} className="grid gap-5">
       {returnTo ? <input type="hidden" name="volver" value={returnTo} /> : null}
 
       <div className="grid gap-5 md:grid-cols-2">
@@ -210,6 +238,15 @@ export function ProductForm({
           {isUploadingImage ? "Subiendo imagen..." : submitLabel}
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={isCreateConfirmOpen}
+        title="Crear producto"
+        description="Confirma que los datos cargados son correctos antes de agregar este producto al catalogo."
+        confirmLabel="Crear producto"
+        onCancel={() => setIsCreateConfirmOpen(false)}
+        onConfirm={confirmCreateProduct}
+      />
     </form>
   );
 }

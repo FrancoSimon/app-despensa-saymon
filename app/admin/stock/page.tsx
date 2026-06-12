@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PaginationControls } from "@/components/navigation/pagination-controls";
 import { StockProductSelector } from "@/components/stock/stock-product-selector";
 import { StockSupplierSelector } from "@/components/stock/stock-supplier-selector";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { requireAdminProfile } from "@/lib/auth/require-admin";
 import { parsePage } from "@/lib/pagination";
 import { listAdminProducts } from "@/lib/products/queries";
@@ -166,7 +167,13 @@ export default async function AdminStockPage({
           <h2 className="text-xl font-black text-white">
             Registrar compra / lote
           </h2>
-          <form action={registerStockPurchaseAction} className="mt-5 grid gap-4">
+          <ConfirmedActionForm
+            action={registerStockPurchaseAction}
+            className="mt-5 grid gap-4"
+            title="Registrar compra"
+            description="Se registrara la compra y se sumara la cantidad comprada al stock del producto seleccionado."
+            confirmLabel="Registrar compra"
+          >
             <StockProductSelector
               products={activeProducts}
               name="productoId"
@@ -234,7 +241,7 @@ export default async function AdminStockPage({
             <button className="rounded-md bg-lime-300 px-5 py-3 text-sm font-black text-black transition hover:bg-lime-200">
               Registrar compra y sumar stock
             </button>
-          </form>
+          </ConfirmedActionForm>
         </section>
 
         <section className="rounded-lg border border-white/10 bg-black p-5">
@@ -310,7 +317,13 @@ export default async function AdminStockPage({
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <section className="rounded-lg border border-white/10 bg-black p-5">
           <h2 className="text-xl font-black text-white">Movimiento manual</h2>
-          <form action={registerStockMovementAction} className="mt-5 grid gap-4">
+          <ConfirmedActionForm
+            action={registerStockMovementAction}
+            className="mt-5 grid gap-4"
+            title="Registrar ajuste manual"
+            description="Se registrara un movimiento manual y se modificara el stock del producto seleccionado."
+            confirmLabel="Registrar ajuste"
+          >
             <StockProductSelector
               products={activeProducts}
               name="productoId"
@@ -355,7 +368,7 @@ export default async function AdminStockPage({
             <button className="rounded-md border border-lime-300/70 px-5 py-3 text-sm font-black text-lime-100 transition hover:bg-lime-950">
               Registrar ajuste manual
             </button>
-          </form>
+          </ConfirmedActionForm>
         </section>
 
         <section className="rounded-lg border border-white/10 bg-black p-5">

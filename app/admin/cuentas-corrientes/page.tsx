@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { PaginationControls } from "@/components/navigation/pagination-controls";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { registerAccountPaymentAction } from "@/lib/accounts/actions";
 import {
   listAccountMovementsPaginated,
@@ -190,9 +191,12 @@ export default async function AdminCurrentAccountsPage({
                     </div>
                   </div>
 
-                  <form
+                  <ConfirmedActionForm
                     action={registerAccountPaymentAction}
                     className="mt-4 grid items-end gap-3 lg:grid-cols-[minmax(130px,0.8fr)_minmax(150px,0.9fr)_minmax(180px,1fr)_auto]"
+                    title="Registrar pago"
+                    description={`Se registrara un pago en la cuenta corriente de ${account.clienteNombre} y se actualizara su saldo.`}
+                    confirmLabel="Registrar pago"
                   >
                     <input
                       type="hidden"
@@ -248,7 +252,7 @@ export default async function AdminCurrentAccountsPage({
                     >
                       Registrar pago
                     </button>
-                  </form>
+                  </ConfirmedActionForm>
                 </article>
               );
             })}

@@ -192,9 +192,14 @@ The wholesale portal SHALL allow wholesalers to inspect a previous order without
 ### Requirement: In-App Confirmation Dialogs
 Critical actions SHALL use styled in-app confirmation dialogs instead of browser-native confirm dialogs.
 
-#### Scenario: Admin confirms critical action
-- **WHEN** an admin attempts a critical action such as confirming, rejecting, delivering, canceling a wholesale order, or closing a cash register
-- **THEN** the app shows an in-app dialog with action-specific title, message, cancel action, and confirm action
+#### Scenario: User submits critical mutation form
+- **WHEN** a user submits a form that changes stock, cash, customer debt, product active state, or sale status
+- **THEN** the app shows an in-app confirmation dialog before executing the mutation
+- **AND** executes the mutation only after the user confirms
+
+#### Scenario: Critical form is invalid
+- **WHEN** a user submits an invalid critical mutation form
+- **THEN** the app shows validation feedback before showing a confirmation dialog
 
 ### Requirement: Inline Validation Feedback
 Forms SHALL show validation feedback inside the app UI instead of relying on browser-native validation bubbles for supported forms.

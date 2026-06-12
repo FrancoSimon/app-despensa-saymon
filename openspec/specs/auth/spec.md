@@ -1,9 +1,7 @@
 ## Purpose
 
 Define Supabase Auth authentication and role-based access control for admin, seller, and wholesale users.
-
 ## Requirements
-
 ### Requirement: Supabase Email Password Login
 The system SHALL authenticate users with Supabase Auth email and password credentials.
 
@@ -34,6 +32,10 @@ The system SHALL restrict routes and actions by user role.
 - **WHEN** a wholesale user is authenticated
 - **THEN** they can access `/mayorista/*`
 - **AND** cannot access admin or seller-only routes
+
+#### Scenario: Admin changes user access
+- **WHEN** an admin creates or updates a user with role or active-state permissions
+- **THEN** the app asks for explicit confirmation before saving the change
 
 #### Scenario: Anonymous user opens protected route
 - **WHEN** an unauthenticated user opens a protected route

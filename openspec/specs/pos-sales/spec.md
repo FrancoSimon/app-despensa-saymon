@@ -47,7 +47,7 @@ The POS SHALL allow percentage discount and surcharge adjustments before checkou
 - **AND** shows intermediate calculations
 
 ### Requirement: Sale Confirmation and Stock Deduction
-The POS SHALL register counter sales and deduct stock only when stock is sufficient.
+The POS SHALL register counter sales, deduct stock only when stock is sufficient, and require confirmation before cancellation.
 
 #### Scenario: Seller confirms sale with enough stock
 - **WHEN** the seller confirms checkout
@@ -61,6 +61,12 @@ The POS SHALL register counter sales and deduct stock only when stock is suffici
 - **THEN** the system blocks checkout
 - **AND** shows a stock insufficiency error
 - **AND** does not register the sale
+
+#### Scenario: User cancels counter sale
+- **WHEN** an authorized user submits a counter sale cancellation with a reason
+- **THEN** the app asks for explicit confirmation before cancelling
+- **AND** the sale is marked annulled only after confirmation
+- **AND** stock and totals are adjusted according to the cancellation rules
 
 ### Requirement: Internal Ticket PDF
 The POS SHALL generate a downloadable and printable internal PDF ticket after sale completion.

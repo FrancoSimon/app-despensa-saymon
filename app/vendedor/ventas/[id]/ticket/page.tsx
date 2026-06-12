@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { PrintTicketButton } from "@/components/pos/print-ticket-button";
 import { WhatsAppTicketButton } from "@/components/pos/whatsapp-ticket-button";
+import { ConfirmedActionForm } from "@/components/ui/confirmed-action-form";
 import { requireSellerProfile } from "@/lib/auth/require-admin";
 import { businessInfo, getBusinessReceiptLines } from "@/lib/business-info";
 import { cancelCounterSaleAction } from "@/lib/sales/actions";
@@ -317,9 +318,13 @@ export default async function SaleTicketPage({
       </article>
 
       {ticket.estado === "activa" ? (
-        <form
+        <ConfirmedActionForm
           action={cancelCounterSaleAction}
           className="mx-auto mt-5 grid max-w-sm gap-3 rounded-lg border border-red-400/30 bg-black p-4 text-white print:hidden"
+          title="Anular venta"
+          description="Se anulara la venta y se repondra el stock de los productos incluidos. Esta accion quedara registrada."
+          confirmLabel="Anular venta"
+          tone="danger"
         >
           <input type="hidden" name="ventaId" value={ticket.id} />
           <input type="hidden" name="volver" value={backHref} />
@@ -335,7 +340,7 @@ export default async function SaleTicketPage({
           <button className="rounded-md border border-red-400/40 px-4 py-3 text-sm font-black text-red-100 transition hover:bg-red-950">
             Anular venta y reponer stock
           </button>
-        </form>
+        </ConfirmedActionForm>
       ) : null}
     </main>
   );

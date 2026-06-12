@@ -6,13 +6,14 @@ Define product, price, barcode, image, and stock management for SAYMON.
 The system SHALL allow admins to create, read, update, and deactivate products while preserving safe admin return paths.
 
 #### Scenario: Admin creates product
-- **WHEN** an admin submits a product form
-- **THEN** the system validates required fields including name, counter price, and stock
-- **AND** saves the product when validation passes
+- **WHEN** an admin submits a new product form with valid required fields
+- **THEN** the app shows an in-app confirmation modal before saving
+- **AND** saves the product only after the admin confirms
 
 #### Scenario: Admin deactivates product
 - **WHEN** an admin removes a product from active use
-- **THEN** the system marks it inactive or deleted logically
+- **THEN** the app asks for explicit confirmation
+- **AND** the system marks it inactive or deleted logically only after confirmation
 - **AND** keeps the database record to preserve links with sales, invoices, orders, and reports
 - **AND** excludes inactive products from normal product selection unless an admin explicitly filters for them
 

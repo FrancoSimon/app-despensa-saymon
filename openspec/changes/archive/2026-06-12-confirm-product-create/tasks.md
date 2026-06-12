@@ -1,0 +1,3 @@
+- [x] Add create-product submit interception with confirmation modal.
+- [x] Preserve validation and edit-product behavior.
+- [x] Validate lint/build and OpenSpec change.

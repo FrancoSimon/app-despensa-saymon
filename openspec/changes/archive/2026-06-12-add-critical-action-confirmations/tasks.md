@@ -1,0 +1,7 @@
+- [x] Add a reusable confirmed Server Action form component.
+- [x] Add confirmations to product deactivation and sale cancellation.
+- [x] Add confirmations to stock purchase/manual movement forms.
+- [x] Add confirmations to account-current payment forms.
+- [x] Add confirmation to cash movement registration.
+- [x] Add confirmations to user creation and updates.
+- [x] Validate lint/build and OpenSpec changes.
