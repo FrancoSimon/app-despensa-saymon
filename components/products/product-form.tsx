@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BarcodeValueScanner } from "@/components/products/barcode-value-scanner";
 import { ProductImageUpload } from "@/components/products/product-image-upload";
 import type { Product } from "@/lib/products/types";
 
@@ -46,6 +47,7 @@ export function ProductForm({
   returnTo,
 }: ProductFormProps) {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [barcodeValue, setBarcodeValue] = useState(product?.codigoBarras ?? "");
 
   return (
     <form action={action} className="grid gap-5">
@@ -161,9 +163,11 @@ export function ProductForm({
           <input
             className={inputClass}
             name="codigoBarras"
-            defaultValue={product?.codigoBarras ?? ""}
+            value={barcodeValue}
+            onChange={(event) => setBarcodeValue(event.target.value)}
             placeholder="Opcional"
           />
+          <BarcodeValueScanner onCodeScanned={setBarcodeValue} />
         </div>
       </div>
 

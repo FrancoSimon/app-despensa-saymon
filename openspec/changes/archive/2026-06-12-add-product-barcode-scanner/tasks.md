@@ -1,0 +1,3 @@
+- [x] Add a reusable barcode value scanner component for form fields.
+- [x] Wire the product form barcode input to support manual typing and scanner capture.
+- [x] Validate lint/build and OpenSpec change.
