@@ -55,6 +55,6 @@ Este documento relaciona los requisitos del Trabajo Final Integrador con evidenc
 
 ## Pendientes que dependen de la entrega final
 
-- Completar integrantes, fecha de entrega y fecha de defensa.
+- Completar fecha de entrega y fecha de defensa.
 - Definir si las credenciales demo se entregan en privado a la catedra.
 - Completar commit/version final presentada si se vuelve a commitear documentacion.

@@ -7,7 +7,7 @@
 - **Tipo de entrega:** Trabajo Final Integrador
 - **Repositorio:** https://github.com/FrancoSimon/app-despensa-saymon
 - **Aplicacion desplegada:** https://app-despensa-saymon-l9sa.vercel.app/
-- **Integrante/s:** Completar
+- **Integrante/s:** Franco Simón Olmedo
 - **Fecha de defensa:** Completar
 
 ## 2. Resumen ejecutivo

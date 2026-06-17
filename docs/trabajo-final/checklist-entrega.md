@@ -19,7 +19,7 @@
 - [x] URL del repositorio: https://github.com/FrancoSimon/app-despensa-saymon
 - [x] URL de despliegue: https://app-despensa-saymon-l9sa.vercel.app/
 - [ ] Commit/version presentada:
-- [ ] Integrante/s:
+- [x] Integrante/s: Franco Simón Olmedo
 - [ ] Fecha de entrega:
 - [ ] Fecha de defensa:
 - [ ] Credenciales demo admin:
