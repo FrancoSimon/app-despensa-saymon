@@ -22,9 +22,9 @@
 - [x] Integrante/s: Franco Simón Olmedo
 - [ ] Fecha de entrega:
 - [ ] Fecha de defensa:
-- [ ] Credenciales demo admin:
-- [ ] Credenciales demo vendedor:
-- [ ] Credenciales demo mayorista:
+- [x] Credenciales demo admin: `admin@saymon.local` / `123456789`
+- [x] Credenciales demo vendedor: `franco0053@gmail.com` / `123456789`
+- [x] Credenciales demo mayorista: `franko666@gmail.com` / `123456789`
 
 ## Capturas recomendadas
 

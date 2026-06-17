@@ -178,6 +178,14 @@ La verificacion del proyecto debe incluir:
 
 Verificacion realizada: la URL publica responde `200 OK`.
 
+### Credenciales demo para la catedra
+
+| Rol | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@saymon.local` | `123456789` |
+| Vendedor / Mostrador | `franco0053@gmail.com` | `123456789` |
+| Mayorista | `franko666@gmail.com` | `123456789` |
+
 ## 15. Capturas sugeridas
 
 Las capturas estan disponibles en [capturas.md](capturas.md) y en la carpeta `docs/trabajo-final/capturas/`.

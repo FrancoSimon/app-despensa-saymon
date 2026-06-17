@@ -54,9 +54,9 @@ Completar antes de la defensa:
 
 | Rol | Email | Password | Uso en la demo |
 | --- | --- | --- | --- |
-| Admin | Completar | Completar | Gestion y reportes |
-| Vendedor | Completar | Completar | Venta de mostrador y caja |
-| Mayorista | Completar | Completar | Pedido mayorista |
+| Admin | `admin@saymon.local` | `123456789` | Gestion y reportes |
+| Vendedor | `franco0053@gmail.com` | `123456789` | Venta de mostrador y caja |
+| Mayorista | `franko666@gmail.com` | `123456789` | Pedido mayorista |
 
 ## 6. Recorrido de uso por rol
 
