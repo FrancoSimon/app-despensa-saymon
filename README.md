@@ -53,7 +53,7 @@ npm install
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
@@ -80,8 +80,8 @@ npm run lint
 
 Antes de presentar, completar en la documentacion:
 
-- URL del repositorio.
-- URL de despliegue o modo de demostracion acordado.
+- URL del repositorio: https://github.com/FrancoSimon/app-despensa-saymon
+- URL de despliegue: https://app-despensa-saymon-l9sa.vercel.app/
 - Credenciales de usuarios demo.
 - Capturas de pantallas principales.
 - Fecha, integrantes y datos solicitados por la catedra.

@@ -13,18 +13,18 @@ Este documento relaciona los requisitos del Trabajo Final Integrador con evidenc
 | Manejo de datos | Supabase PostgreSQL, migraciones SQL, perfiles, productos, ventas, pedidos, caja, stock y cuentas corrientes. | Cumplido |
 | Integracion o automatizacion | Supabase Auth, Supabase Storage, RPCs, scanner de codigos de barras, tickets y exportaciones CSV. | Cumplido |
 | Uso documentado de IA | `docs/trabajo-final/registro-uso-ia.md`. | Cumplido |
-| Despliegue | Completar URL publica o indicar demostracion local acordada. | Pendiente externo |
+| Despliegue | URL publica en Vercel: https://app-despensa-saymon-l9sa.vercel.app/. | Cumplido |
 
 ## Entregables
 
 | Entregable | Archivo/evidencia | Estado |
 | --- | --- | --- |
-| Repositorio | Completar URL en README y documentacion final. | Pendiente externo |
-| Enlace desplegado | Completar URL en documentacion final y guia de uso. | Pendiente externo |
+| Repositorio | https://github.com/FrancoSimon/app-despensa-saymon | Cumplido |
+| Enlace desplegado | https://app-despensa-saymon-l9sa.vercel.app/ | Cumplido |
 | README claro | `README.md` actualizado con alcance, stack, ejecucion y enlaces. | Cumplido |
 | Documentacion breve | `docs/trabajo-final/documentacion-final.md`. | Cumplido |
 | Memoria del proceso | Secciones de decisiones, uso de IA, aprendizajes y mejoras futuras. | Cumplido |
-| Capturas de pantalla | Checklist y lista sugerida en documentacion final. | Pendiente externo |
+| Capturas de pantalla | `docs/trabajo-final/capturas.md` y carpeta `docs/trabajo-final/capturas/`. | Cumplido |
 | Defensa final | `docs/trabajo-final/guion-defensa.md`. | Cumplido |
 
 ## Criterios de evaluacion
@@ -36,7 +36,7 @@ Este documento relaciona los requisitos del Trabajo Final Integrador con evidenc
 | Funcionalidad y logica de negocio | 25 | POS, stock, caja, pedidos mayoristas, cuentas corrientes, tickets, anulaciones/cancelaciones y validaciones. |
 | Datos, APIs o automatizacion | 15 | Supabase Auth/PostgreSQL/Storage, RPCs, scanner de codigo de barras y exportaciones CSV. |
 | Uso de IA en el proceso | 15 | Registro de prompts, decisiones, riesgos, limites y aprendizajes. |
-| Despliegue, documentacion y defensa | 15 | README, docs de entrega, guia de instalacion, guion de defensa y checklist. Falta completar URL/capturas. |
+| Despliegue, documentacion y defensa | 15 | README, docs de entrega, guia de instalacion, guion de defensa, checklist, capturas y URL publica verificada. |
 
 ## Evidencias por flujo demo
 
@@ -55,8 +55,6 @@ Este documento relaciona los requisitos del Trabajo Final Integrador con evidenc
 
 ## Pendientes que dependen de la entrega final
 
-- Completar URL del repositorio.
-- Completar URL del despliegue o acordar demostracion local.
-- Cargar usuarios y datos demo.
-- Agregar capturas en `docs/trabajo-final/capturas/`.
-- Ejecutar y registrar resultado de `npm run lint` y `npm run build`.
+- Completar integrantes, fecha de entrega y fecha de defensa.
+- Definir si las credenciales demo se entregan en privado a la catedra.
+- Completar commit/version final presentada si se vuelve a commitear documentacion.

@@ -13,7 +13,7 @@ Crear `.env.local` en la raiz del proyecto:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
@@ -132,8 +132,6 @@ Una opcion natural para este stack es Vercel:
 4. Verificar que Supabase permita el dominio desplegado.
 5. Ejecutar una prueba de login y flujos principales.
 
-Completar:
-
-- URL de despliegue: Completar
-- Fecha de despliegue: Completar
-- Version/commit presentado: Completar
+- URL de despliegue: https://app-despensa-saymon-l9sa.vercel.app/
+- Fecha de despliegue: 16/06/2026
+- Version/commit presentado: completar con el commit final de entrega

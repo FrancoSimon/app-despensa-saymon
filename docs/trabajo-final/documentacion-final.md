@@ -5,8 +5,8 @@
 - **Nombre:** App Despensa SAYMON
 - **Curso:** Desarrollo de Aplicaciones Web con Inteligencia Artificial
 - **Tipo de entrega:** Trabajo Final Integrador
-- **Repositorio:** Completar con URL del repositorio
-- **Aplicacion desplegada:** Completar con URL publica o indicar demostracion local acordada
+- **Repositorio:** https://github.com/FrancoSimon/app-despensa-saymon
+- **Aplicacion desplegada:** https://app-despensa-saymon-l9sa.vercel.app/
 - **Integrante/s:** Completar
 - **Fecha de defensa:** Completar
 
@@ -170,15 +170,13 @@ La verificacion del proyecto debe incluir:
 
 ## 14. Despliegue
 
-Completar antes de entregar:
-
-- **Plataforma de despliegue:** Completar, por ejemplo Vercel.
-- **URL publica:** Completar.
-- **Variables de entorno configuradas:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- **Plataforma de despliegue:** Vercel.
+- **URL publica:** https://app-despensa-saymon-l9sa.vercel.app/
+- **Variables de entorno configuradas:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
 - **Base Supabase:** migraciones aplicadas y primer usuario admin creado.
 - **Datos demo:** productos, clientes, usuarios y pedidos suficientes para la defensa.
 
-Si no se usa URL publica, dejar asentada la demostracion local acordada con la catedra.
+Verificacion realizada: la URL publica responde `200 OK`.
 
 ## 15. Capturas sugeridas
 

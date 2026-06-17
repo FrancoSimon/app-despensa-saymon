@@ -8,16 +8,16 @@
 - [x] Manejo de datos persistentes.
 - [x] Integracion externa o automatizacion significativa.
 - [x] Uso documentado de IA.
-- [ ] Despliegue accesible o demostracion acordada.
-- [ ] Repositorio con URL final.
+- [x] Despliegue accesible o demostracion acordada.
+- [x] Repositorio con URL final.
 - [x] Documentacion breve del proyecto.
 - [x] Capturas de pantalla.
 - [x] Guion de defensa final.
 
 ## Datos a completar antes de presentar
 
-- [ ] URL del repositorio:
-- [ ] URL de despliegue:
+- [x] URL del repositorio: https://github.com/FrancoSimon/app-despensa-saymon
+- [x] URL de despliegue: https://app-despensa-saymon-l9sa.vercel.app/
 - [ ] Commit/version presentada:
 - [ ] Integrante/s:
 - [ ] Fecha de entrega:
@@ -51,15 +51,15 @@ Agregar:
 
 ## Verificacion tecnica
 
-- [ ] `npm install` ejecuta correctamente.
-- [ ] `.env.local` configurado.
-- [ ] Migraciones Supabase aplicadas.
-- [ ] Usuario admin inicial creado.
-- [ ] Datos demo cargados.
-- [ ] `npm run lint` sin errores bloqueantes.
-- [ ] `npm run build` sin errores bloqueantes.
-- [ ] Login probado con los tres roles.
-- [ ] Rutas protegidas validadas.
+- [x] `.env.local` configurado en desarrollo local.
+- [x] Migraciones Supabase aplicadas.
+- [x] Usuario admin inicial creado.
+- [x] Datos demo cargados.
+- [x] `npm run lint` sin errores bloqueantes.
+- [x] `npm run build` sin errores bloqueantes.
+- [x] URL desplegada responde `200 OK`.
+- [x] Login probado con los tres roles.
+- [x] Rutas protegidas validadas.
 
 ## Flujos demo
 
