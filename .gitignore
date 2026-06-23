@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# project delivery materials
+capturas.md
+checklist-entrega.md
+create-presentation-pptx.ps1
+guion-defensa.md
+presentacion-defensa.html
+presentacion-defensa.pptx
