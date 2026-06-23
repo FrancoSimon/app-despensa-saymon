@@ -23,10 +23,7 @@ La documentacion preparada para presentar y defender el proyecto esta en:
 - [Documentacion final](docs/trabajo-final/documentacion-final.md)
 - [Guia de instalacion y uso](docs/trabajo-final/guia-instalacion-y-uso.md)
 - [Registro de uso de IA](docs/trabajo-final/registro-uso-ia.md)
-- [Guion de defensa](docs/trabajo-final/guion-defensa.md)
 - [Matriz de cumplimiento del enunciado](docs/trabajo-final/matriz-cumplimiento-enunciado.md)
-- [Capturas de pantalla](docs/trabajo-final/capturas.md)
-- [Checklist de entrega](docs/trabajo-final/checklist-entrega.md)
 
 Tambien existe una guia tecnica especifica para configurar Supabase:
 
